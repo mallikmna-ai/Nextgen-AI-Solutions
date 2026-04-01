@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LayerStack — Portfolio Image Composer</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0e0e10;
+      --surface: #18181c;
+      --surface2: #222228;
+      --border: #2e2e38;
+      --accent: #c8f060;
+      --accent2: #60c8f0;
+      --text: #f0f0f4;
+      --muted: #7a7a8a;
+      --danger: #f06060;
+      --frame: #60c8f0;
+      --panel-w: 272px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.02em; }
+    .logo span { color: var(--accent); }
+    .hdr-actions { display: flex; gap: 8px; }
+
+    /* ── Buttons ── */
+    button {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      transition: all 0.15s;
+    }
+    .btn-ghost  { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+    .btn-accent { background: var(--accent); color: #0e0e10; font-weight: 500; }
+    .btn-accent:hover { background: #d8ff70; }
+    .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 4px 9px; font-size: 0.66rem; }
+
+    /* ── Layout ── */
+    .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Panel ── */
+    .panel {
+      width: var(--panel-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .panel-sec { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .sec-label { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 10px; }
+
+    /* Upload */
+    .upload-zone {
+      border: 1.5px dashed var(--border);
+      border-radius: 10px;
+      padding: 20px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: block;
+    }
+    .upload-zone:hover, .upload-zone.over { border-color: var(--accent); background: rgba(200,240,96,0.04); }
+    .upload-zone input { display: none; }
+    .upload-zone .icon { font-size: 1.4rem; margin-bottom: 5px; }
+    .upload-zone p { font-size: 0.67rem; color: var(--muted); line-height: 1.55; }
+    .upload-zone strong { color: var(--accent); }
+
+    /* Form */
+    .row { display: flex; gap: 8px; align-items: flex-end; }
+    .ig { flex: 1; }
+    .ig label { font-size: 0.59rem; color: var(--muted); display: block; margin-bottom: 4px; }
+    .ig input[type=number], .ig input[type=color] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.73rem;
+      padding: 5px 8px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .ig input[type=number]:focus { border-color: var(--accent2); }
+    .ig input[type=color] { padding: 2px 4px; height: 32px; cursor: pointer; }
+
+    /* Align grid */
+    .align-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+    .al-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.95rem;
+      padding: 7px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .al-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* Layer list */
+    .layer-list { display: flex; flex-direction: column; gap: 6px; }
+    .lyr-item {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .lyr-item:hover { border-color: var(--muted); }
+    .lyr-item.active { border-color: var(--accent); }
+    .lyr-hdr { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+    .lyr-thumb { width: 30px; height: 30px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); flex-shrink: 0; }
+    .lyr-name { font-size: 0.63rem; color: var(--muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lyr-acts { display: flex; gap: 3px; }
+    .lyr-ctrls { display: flex; flex-direction: column; gap: 6px; }
+
+    .sl-row { display: flex; align-items: center; gap: 6px; }
+    .sl-row label { font-size: 0.59rem; color: var(--muted); width: 42px; flex-shrink: 0; }
+    .sl-row input[type=range] { flex: 1; accent-color: var(--accent2); cursor: pointer; }
+    .sl-row span { font-size: 0.59rem; color: var(--muted); width: 34px; text-align: right; }
+
+    .sz-row { display: flex; align-items: center; gap: 5px; }
+    .sz-row label { font-size: 0.59rem; color: var(--muted); flex-shrink: 0; }
+    .sz-row input[type=number] {
+      width: 56px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.61rem;
+      padding: 3px 6px;
+      outline: none;
+    }
+    .sz-row input[type=number]:focus { border-color: var(--accent2); }
+    .lock-badge {
+      font-size: 0.7rem;
+      color: var(--accent2);
+      opacity: 0.7;
+      padding: 0 2px;
+    }
+
+    /* ── Canvas area ── */
+    .canvas-wrap {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      background-image:
+        radial-gradient(circle at 15% 25%, rgba(96,200,240,0.04) 0%, transparent 55%),
+        radial-gradient(circle at 85% 75%, rgba(200,240,96,0.04) 0%, transparent 55%);
+    }
+    .canvas-scroll {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 100%;
+      min-height: 100%;
+      padding: 48px;
+    }
+
+    #stage {
+      position: relative;
+      flex-shrink: 0;
+      overflow: visible; /* allow images to extend beyond canvas boundary */
+      box-shadow: 0 0 0 1px var(--border), 0 24px 64px rgba(0,0,0,0.7);
+      /* checkerboard for transparent bg */
+      background-image:
+        linear-gradient(45deg,#bbb 25%,transparent 25%),
+        linear-gradient(-45deg,#bbb 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#bbb 75%),
+        linear-gradient(-45deg,transparent 75%,#bbb 75%);
+      background-size: 16px 16px;
+      background-position: 0 0,0 8px,8px -8px,-8px 0px;
+    }
+    #stageBg { position: absolute; inset: 0; z-index: 0; }
+
+    /* ── Image layer (frame) ── */
+    .img-layer {
+      position: absolute;
+      user-select: none;
+      touch-action: none;
+      /* z-index set by JS */
+    }
+
+    /* The image fills the frame exactly */
+    .img-layer img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;  /* preserves the frame, ratio enforced by frame dimensions */
+      pointer-events: none;
+      position: relative;
+      z-index: 1;
+      border-radius: 0;
+    }
+
+    /* Transparent overlay for move dragging */
+    .img-layer .move-cover {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      cursor: grab;
+    }
+    .img-layer .move-cover:active { cursor: grabbing; }
+
+    /* Frame border — shown only when selected */
+    .img-layer .frm {
+      position: absolute;
+      inset: 0;
+      border: 1.5px solid var(--frame);
+      pointer-events: none;
+      display: none;
+      z-index: 4;
+    }
+    .img-layer.sel .frm { display: block; }
+
+    /* 8 resize handles — shown only when selected */
+    .hdl {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #fff;
+      border: 1.5px solid var(--frame);
+      border-radius: 2px;
+      z-index: 10;
+      display: none;
+    }
+    .img-layer.sel .hdl { display: block; }
+
+    /* Positions for each handle */
+    .hdl-nw { top:-5px;    left:-5px;           cursor: nw-resize; }
+    .hdl-n  { top:-5px;    left:calc(50% - 5px); cursor: n-resize;  }
+    .hdl-ne { top:-5px;    right:-5px;           cursor: ne-resize; }
+    .hdl-e  { top:calc(50% - 5px); right:-5px;  cursor: e-resize;  }
+    .hdl-se { bottom:-5px; right:-5px;           cursor: se-resize; }
+    .hdl-s  { bottom:-5px; left:calc(50% - 5px); cursor: s-resize;  }
+    .hdl-sw { bottom:-5px; left:-5px;            cursor: sw-resize; }
+    .hdl-w  { top:calc(50% - 5px); left:-5px;   cursor: w-resize;  }
+
+    /* Empty state */
+    .empty {
+      position: absolute; inset: 0; z-index: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; pointer-events: none;
+    }
+    .empty .e-icon { font-size: 2.4rem; opacity: 0.18; }
+    .empty p { font-size: 0.68rem; color: var(--muted); opacity: 0.45; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 0.71rem; color: var(--text);
+      z-index: 9999;
+      transform: translateY(60px); opacity: 0;
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    @media (max-width: 780px) { :root { --panel-w: 220px; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Layer<span>Stack</span></div>
+  <div class="hdr-actions">
+    <button class="btn-ghost" id="btnReset">↺ Reset</button>
+    <button class="btn-accent" id="btnExport">↓ Export PNG</button>
+  </div>
+</header>
+
+<div class="app-body">
+
+  <!-- Panel -->
+  <div class="panel">
+
+    <div class="panel-sec">
+      <div class="sec-label">Upload Images</div>
+      <label class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" multiple accept="image/*">
+        <div class="icon">⊞</div>
+        <p><strong>Click to upload</strong><br>or drag &amp; drop<br>PNG · JPG · WEBP · GIF</p>
+      </label>
+    </div>
+
+    <div class="panel-sec">
+      <div class="sec-label">Canvas</div>
+      <div class="row" style="margin-bottom:8px">
+        <div class="ig"><label>Width (px)</label><input type="number" id="inpW" value="1200" min="100" max="6000"></div>
+        <div class="ig"><label>Height (px)</label><input type="number" id="inpH" value="800" min="100" max="6000"></div>
+      </div>
+      <div class="row">
+        <div class="ig"><label>Background</label><input type="color" id="inpBg" value="#ffffff"></div>
+        <div><button class="btn-ghost btn-sm" id="btnApply" style="margin-bottom:0">Apply</button></div>
+      </div>
+    </div>
+
+    <div class="panel-sec">
+      <div class="sec-label">Align Selected</div>
+      <div class="align-grid">
+        <button class="al-btn" data-a="tl">↖</button>
+        <button class="al-btn" data-a="tc">↑</button>
+        <button class="al-btn" data-a="tr">↗</button>
+        <button class="al-btn" data-a="ml">←</button>
+        <button class="al-btn" data-a="mc">✛</button>
+        <button class="al-btn" data-a="mr">→</button>
+        <button class="al-btn" data-a="bl">↙</button>
+        <button class="al-btn" data-a="bc">↓</button>
+        <button class="al-btn" data-a="br">↘</button>
+      </div>
+    </div>
+
+    <div class="panel-sec" style="flex:1;min-height:0">
+      <div class="sec-label">Layers</div>
+      <div class="layer-list" id="layerList">
+        <p style="font-size:.67rem;color:var(--muted);text-align:center;padding:14px 0">No layers yet</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Stage -->
+  <div class="canvas-wrap">
+    <div class="canvas-scroll">
+      <div id="stage">
+        <div id="stageBg"></div>
+        <div class="empty" id="emptyState">
+          <div class="e-icon">🖼</div>
+          <p>Upload images to get started</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   LayerStack — Portfolio Image Composer
+   Images are always contained within the canvas.
+   Aspect ratio is always locked.
+══════════════════════════════════════════════════════ */
+
+// ── State ─────────────────────────────────────────────
+const S = {
+  layers: [],
+  selId:  null,
+  nextId: 1,
+  cw: 1200,
+  ch: 800,
+  bg: '#ffffff'
+};
+
+// ── DOM ───────────────────────────────────────────────
+const stage      = document.getElementById('stage');
+const stageBg    = document.getElementById('stageBg');
+const layerList  = document.getElementById('layerList');
+const fileInput  = document.getElementById('fileInput');
+const uploadZone = document.getElementById('uploadZone');
+const inpW       = document.getElementById('inpW');
+const inpH       = document.getElementById('inpH');
+const inpBg      = document.getElementById('inpBg');
+const emptyState = document.getElementById('emptyState');
+const toastEl    = document.getElementById('toast');
+
+// ── Init ──────────────────────────────────────────────
+syncStageSize();
+
+// ── Canvas controls ───────────────────────────────────
+document.getElementById('btnApply').addEventListener('click', () => {
+  S.cw = Math.max(100, parseInt(inpW.value) || 1200);
+  S.ch = Math.max(100, parseInt(inpH.value) || 800);
+  S.bg = inpBg.value;
+  syncStageSize();
+  toast('Canvas updated');
+});
+inpBg.addEventListener('input', () => { S.bg = inpBg.value; stageBg.style.background = S.bg; });
+
+function syncStageSize() {
+  stage.style.width        = S.cw + 'px';
+  stage.style.height       = S.ch + 'px';
+  stageBg.style.background = S.bg;
+}
+
+// ── Upload ────────────────────────────────────────────
+fileInput.addEventListener('change', e => { loadFiles(e.target.files); fileInput.value = ''; });
+uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('over');
+  loadFiles(e.dataTransfer.files);
+});
+
+function loadFiles(files) {
+  [...files].forEach(f => {
+    if (!f.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = ev => addLayer(ev.target.result, f.name);
+    r.readAsDataURL(f);
+  });
+}
+
+// ── Add layer ─────────────────────────────────────────
+function addLayer(src, name) {
+  const img = new Image();
+  img.onload = () => {
+    const id = S.nextId++;
+    const ar = img.naturalWidth / img.naturalHeight; // locked forever
+
+    // Scale down to fit inside canvas if needed, preserving AR
+    let w = img.naturalWidth;
+    let h = img.naturalHeight;
+    if (w > S.cw || h > S.ch) {
+      const scale = Math.min(S.cw / w, S.ch / h);
+      w = Math.floor(w * scale);
+      h = Math.floor(h * scale);
+    }
+
+    const layer = {
+      id,
+      name: name || ('Layer ' + id),
+      src,
+      ar,          // aspect ratio — locked, never changes
+      x: Math.round((S.cw - w) / 2),
+      y: Math.round((S.ch - h) / 2),
+      w,
+      h,
+      opacity: 1,
+      z: S.layers.length + 1
+    };
+
+    S.layers.push(layer);
+    buildLayerEl(layer);
+    rebuildPanel();
+    select(id);
+    refreshEmpty();
+  };
+  img.src = src;
+}
+
+// ── Core constraint function ──────────────────────────
+// Clamps size within [minSize, canvas] preserving AR.
+// Does NOT move position — caller is responsible for anchor logic.
+function constrainSize(w, h, ar, minSize) {
+  minSize = minSize || 20;
+  if (w < minSize) { w = minSize; h = w / ar; }
+  if (h < minSize) { h = minSize; w = h * ar; }
+  if (w > S.cw)    { w = S.cw;   h = w / ar; }
+  if (h > S.ch)    { h = S.ch;   w = h * ar; }
+  if (w < minSize) { w = minSize; h = w / ar; } // re-check after max clamp
+  return { w, h };
+}
+
+// Full position+size constraint for panel inputs (no anchor context).
+function constrainFull(x, y, w, h, ar) {
+  const s = constrainSize(w, h, ar);
+  w = s.w; h = s.h;
+  if (x < 0) x = 0;
+  if (y < 0) y = 0;
+  if (x + w > S.cw) x = S.cw - w;
+  if (y + h > S.ch) y = S.ch - h;
+  if (x < 0) x = 0;
+  if (y < 0) y = 0;
+  return { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) };
+}
+
+// ── Build DOM element for layer ───────────────────────
+function buildLayerEl(layer) {
+  const el = document.createElement('div');
+  el.className  = 'img-layer';
+  el.dataset.id = layer.id;
+  applyElStyle(el, layer);
+
+  // Frame border (visible when selected)
+  const frm = document.createElement('div');
+  frm.className = 'frm';
+  el.appendChild(frm);
+
+  // Image (fills the frame div exactly)
+  const img = document.createElement('img');
+  img.src       = layer.src;
+  img.draggable = false;
+  el.appendChild(img);
+
+  // Transparent cover — captures move drag
+  const mv = document.createElement('div');
+  mv.className = 'move-cover';
+  mv.addEventListener('mousedown', e => {
+    e.preventDefault(); e.stopPropagation();
+    select(layer.id);
+    initMove(e, layer, el);
+  });
+  el.appendChild(mv);
+
+  // 8 resize handles
+  ['nw','n','ne','e','se','s','sw','w'].forEach(pos => {
+    const h = document.createElement('div');
+    h.className  = 'hdl hdl-' + pos;
+    h.dataset.pos = pos;
+    h.addEventListener('mousedown', e => {
+      e.preventDefault(); e.stopPropagation();
+      select(layer.id);
+      initResize(e, layer, el, pos);
+    });
+    el.appendChild(h);
+  });
+
+  stage.appendChild(el);
+}
+
+function applyElStyle(el, layer) {
+  el.style.left    = layer.x + 'px';
+  el.style.top     = layer.y + 'px';
+  el.style.width   = layer.w + 'px';
+  el.style.height  = layer.h + 'px';
+  el.style.zIndex  = layer.z;
+  el.style.opacity = layer.opacity;
+}
+
+// ── Select ────────────────────────────────────────────
+function select(id) {
+  S.selId = id;
+  stage.querySelectorAll('.img-layer').forEach(el => {
+    el.classList.toggle('sel', parseInt(el.dataset.id) === id);
+  });
+  document.querySelectorAll('.lyr-item').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.id) === id);
+  });
+}
+
+stage.addEventListener('mousedown', e => {
+  if (e.target === stage || e.target === stageBg) select(null);
+});
+
+// ── Move — stays fully inside canvas ─────────────────
+function initMove(e, layer, el) {
+  const rect = stage.getBoundingClientRect();
+  const sx   = S.cw / rect.width;
+  const sy   = S.ch / rect.height;
+
+  // Offset from layer's top-left to mouse, in canvas coords
+  const ox = (e.clientX - rect.left) * sx - layer.x;
+  const oy = (e.clientY - rect.top)  * sy - layer.y;
+
+  const onMove = ev => {
+    let nx = (ev.clientX - rect.left) * sx - ox;
+    let ny = (ev.clientY - rect.top)  * sy - oy;
+    // No clamping — image can be dragged freely outside canvas in all directions
+    layer.x = Math.round(nx);
+    layer.y = Math.round(ny);
+    el.style.left = layer.x + 'px';
+    el.style.top  = layer.y + 'px';
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup',   onUp);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onUp);
+}
+
+// ── Resize — AR locked, anchor-based, FREE (image can go outside canvas) ──
+//
+// Each handle has a fixed ANCHOR (opposite corner/edge that never moves).
+// The image can freely extend beyond the canvas boundary in any direction.
+// Only minimum size (20px) is enforced.
+//
+function initResize(e, layer, el, pos) {
+  const rect = stage.getBoundingClientRect();
+  const sx   = S.cw / rect.width;
+  const sy   = S.ch / rect.height;
+
+  const mx0 = (e.clientX - rect.left) * sx;
+  const my0 = (e.clientY - rect.top)  * sy;
+  const x0 = layer.x, y0 = layer.y;
+  const w0 = layer.w, h0 = layer.h;
+  const ar = layer.ar;
+  const MIN = 20;
+
+  // Anchor points — these coords stay fixed throughout the drag
+  const anchorRight  = x0 + w0;
+  const anchorBottom = y0 + h0;
+  const anchorLeft   = x0;
+  const anchorTop    = y0;
+  const anchorCX     = x0 + w0 / 2;
+  const anchorCY     = y0 + h0 / 2;
+
+  const onMove = ev => {
+    const mx = (ev.clientX - rect.left) * sx;
+    const my = (ev.clientY - rect.top)  * sy;
+    const dx = mx - mx0;
+    const dy = my - my0;
+
+    let nx, ny, nw, nh;
+
+    switch (pos) {
+
+      // ── Corner handles: anchor = opposite corner, drive from width ──────
+      case 'se': {
+        nw = Math.max(MIN, w0 + dx);
+        nh = nw / ar;
+        nx = anchorLeft;
+        ny = anchorTop;
+        break;
+      }
+      case 'sw': {
+        nw = Math.max(MIN, w0 - dx);
+        nh = nw / ar;
+        nx = anchorRight - nw;
+        ny = anchorTop;
+        break;
+      }
+      case 'ne': {
+        nw = Math.max(MIN, w0 + dx);
+        nh = nw / ar;
+        nx = anchorLeft;
+        ny = anchorBottom - nh;
+        break;
+      }
+      case 'nw': {
+        nw = Math.max(MIN, w0 - dx);
+        nh = nw / ar;
+        nx = anchorRight - nw;
+        ny = anchorBottom - nh;
+        break;
+      }
+
+      // ── Edge handles: anchor = opposite edge, center axis stays pinned ──
+      case 'e': {
+        nw = Math.max(MIN, w0 + dx);
+        nh = nw / ar;
+        nx = anchorLeft;
+        ny = anchorCY - nh / 2;   // vertical center stays fixed
+        break;
+      }
+      case 'w': {
+        nw = Math.max(MIN, w0 - dx);
+        nh = nw / ar;
+        nx = anchorRight - nw;
+        ny = anchorCY - nh / 2;
+        break;
+      }
+      case 's': {
+        nh = Math.max(MIN, h0 + dy);
+        nw = nh * ar;
+        nx = anchorCX - nw / 2;   // horizontal center stays fixed
+        ny = anchorTop;
+        break;
+      }
+      case 'n': {
+        nh = Math.max(MIN, h0 - dy);
+        nw = nh * ar;
+        nx = anchorCX - nw / 2;
+        ny = anchorBottom - nh;
+        break;
+      }
+
+      default: return;
+    }
+
+    layer.x = Math.round(nx);
+    layer.y = Math.round(ny);
+    layer.w = Math.round(nw);
+    layer.h = Math.round(nh);
+
+    el.style.left   = layer.x + 'px';
+    el.style.top    = layer.y + 'px';
+    el.style.width  = layer.w + 'px';
+    el.style.height = layer.h + 'px';
+
+    syncSizeInputs(layer);
+  };
+
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup',   onUp);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onUp);
+}
+
+// ── Sync panel size inputs ────────────────────────────
+function syncSizeInputs(layer) {
+  const item = document.querySelector('.lyr-item[data-id="' + layer.id + '"]');
+  if (!item) return;
+  const wi = item.querySelector('.iw');
+  const hi = item.querySelector('.ih');
+  if (wi) wi.value = layer.w;
+  if (hi) hi.value = layer.h;
+}
+
+// ── Alignment ─────────────────────────────────────────
+document.querySelectorAll('.al-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const layer = getSel();
+    if (!layer) { toast('Select a layer first'); return; }
+    const el = getEl(layer.id);
+    const a  = btn.dataset.a;
+
+    if (a[0] === 't') layer.y = 0;
+    if (a[0] === 'm') layer.y = Math.round((S.ch - layer.h) / 2);
+    if (a[0] === 'b') layer.y = S.ch - layer.h;
+    if (a[1] === 'l') layer.x = 0;
+    if (a[1] === 'c') layer.x = Math.round((S.cw - layer.w) / 2);
+    if (a[1] === 'r') layer.x = S.cw - layer.w;
+
+    if (el) { el.style.left = layer.x + 'px'; el.style.top = layer.y + 'px'; }
+  });
+});
+
+// ── Layer panel ───────────────────────────────────────
+function rebuildPanel() {
+  if (!S.layers.length) {
+    layerList.innerHTML = '<p style="font-size:.67rem;color:var(--muted);text-align:center;padding:14px 0">No layers yet</p>';
+    return;
+  }
+
+  layerList.innerHTML = '';
+  [...S.layers].sort((a, b) => b.z - a.z).forEach(layer => {
+    const item = document.createElement('div');
+    item.className  = 'lyr-item' + (layer.id === S.selId ? ' active' : '');
+    item.dataset.id = layer.id;
+
+    item.innerHTML = `
+      <div class="lyr-hdr">
+        <img class="lyr-thumb" src="${layer.src}" alt="">
+        <span class="lyr-name" title="${layer.name}">${layer.name}</span>
+        <div class="lyr-acts">
+          <button class="btn-ghost btn-sm ibtn-up" title="Bring Forward">↑</button>
+          <button class="btn-ghost btn-sm ibtn-dn" title="Send Backward">↓</button>
+          <button class="btn-danger btn-sm ibtn-del" title="Delete">✕</button>
+        </div>
+      </div>
+      <div class="lyr-ctrls">
+        <div class="sl-row">
+          <label>Opacity</label>
+          <input type="range" min="0" max="1" step="0.01" value="${layer.opacity}" class="iop">
+          <span class="opval">${Math.round(layer.opacity * 100)}%</span>
+        </div>
+        <div class="sz-row">
+          <label>W</label>
+          <input type="number" class="iw" value="${layer.w}" min="20">
+          <span class="lock-badge" title="Aspect ratio locked">⛓</span>
+          <label>H</label>
+          <input type="number" class="ih" value="${layer.h}" min="20">
+        </div>
+      </div>
+    `;
+
+    item.addEventListener('mousedown', e => {
+      if (!['BUTTON','INPUT'].includes(e.target.tagName)) select(layer.id);
+    });
+
+    // Opacity
+    const opSlider = item.querySelector('.iop');
+    const opVal    = item.querySelector('.opval');
+    opSlider.addEventListener('input', () => {
+      layer.opacity = parseFloat(opSlider.value);
+      opVal.textContent = Math.round(layer.opacity * 100) + '%';
+      const el = getEl(layer.id);
+      if (el) el.style.opacity = layer.opacity;
+    });
+
+    // Width input → locked AR + canvas bounds
+    const wi = item.querySelector('.iw');
+    const hi = item.querySelector('.ih');
+
+    wi.addEventListener('input', () => {
+      const typed = Math.max(20, parseInt(wi.value) || layer.w);
+      const c = constrainFull(layer.x, layer.y, typed, typed / layer.ar, layer.ar);
+      layer.x = c.x; layer.y = c.y; layer.w = c.w; layer.h = c.h;
+      wi.value = layer.w; hi.value = layer.h;
+      const el = getEl(layer.id);
+      if (el) { el.style.width = layer.w + 'px'; el.style.height = layer.h + 'px'; }
+    });
+
+    // Height input → locked AR + canvas bounds
+    hi.addEventListener('input', () => {
+      const typed = Math.max(20, parseInt(hi.value) || layer.h);
+      const c = constrainFull(layer.x, layer.y, typed * layer.ar, typed, layer.ar);
+      layer.x = c.x; layer.y = c.y; layer.w = c.w; layer.h = c.h;
+      wi.value = layer.w; hi.value = layer.h;
+      const el = getEl(layer.id);
+      if (el) { el.style.width = layer.w + 'px'; el.style.height = layer.h + 'px'; }
+    });
+
+    item.querySelector('.ibtn-up').addEventListener('click',  e => { e.stopPropagation(); changeZ(layer.id,  1); });
+    item.querySelector('.ibtn-dn').addEventListener('click',  e => { e.stopPropagation(); changeZ(layer.id, -1); });
+    item.querySelector('.ibtn-del').addEventListener('click', e => { e.stopPropagation(); removeLayer(layer.id); });
+
+    layerList.appendChild(item);
+  });
+}
+
+// ── Z-order ───────────────────────────────────────────
+function changeZ(id, dir) {
+  const layer = S.layers.find(l => l.id === id);
+  if (!layer) return;
+  const cands = S.layers.filter(l => dir > 0 ? l.z > layer.z : l.z < layer.z);
+  if (!cands.length) return;
+  const target = cands.reduce((a, b) => dir > 0 ? (a.z < b.z ? a : b) : (a.z > b.z ? a : b));
+  [layer.z, target.z] = [target.z, layer.z];
+  S.layers.forEach(l => { const el = getEl(l.id); if (el) el.style.zIndex = l.z; });
+  rebuildPanel();
+}
+
+// ── Delete ────────────────────────────────────────────
+function removeLayer(id) {
+  const el = getEl(id);
+  if (el) el.remove();
+  S.layers = S.layers.filter(l => l.id !== id);
+  if (S.selId === id) S.selId = null;
+  rebuildPanel();
+  refreshEmpty();
+}
+
+// ── Reset ─────────────────────────────────────────────
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (S.layers.length && !confirm('Clear all layers and reset?')) return;
+  S.layers.forEach(l => { const el = getEl(l.id); if (el) el.remove(); });
+  S.layers = []; S.selId = null; S.nextId = 1;
+  rebuildPanel();
+  refreshEmpty();
+  toast('Canvas reset');
+});
+
+// ── Export PNG ────────────────────────────────────────
+document.getElementById('btnExport').addEventListener('click', exportPNG);
+
+function exportPNG() {
+  const oc  = document.createElement('canvas');
+  oc.width  = S.cw; oc.height = S.ch;
+  const ctx = oc.getContext('2d');
+  ctx.fillStyle = S.bg;
+  ctx.fillRect(0, 0, S.cw, S.ch);
+
+  const sorted = [...S.layers].sort((a, b) => a.z - b.z);
+  if (!sorted.length) { doDownload(oc); return; }
+
+  let done = 0;
+  sorted.forEach(layer => {
+    const img = new Image();
+    img.onload = () => {
+      ctx.save();
+      ctx.globalAlpha = layer.opacity;
+      ctx.drawImage(img, layer.x, layer.y, layer.w, layer.h);
+      ctx.restore();
+      if (++done === sorted.length) doDownload(oc);
+    };
+    img.onerror = () => { if (++done === sorted.length) doDownload(oc); };
+    img.src = layer.src;
+  });
+}
+
+function doDownload(oc) {
+  oc.toBlob(blob => {
+    const a   = document.createElement('a');
+    a.href    = URL.createObjectURL(blob);
+    a.download = 'layerstack-export.png';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('Exported as PNG ✓');
+  }, 'image/png');
+}
+
+// ── Helpers ───────────────────────────────────────────
+const getSel = ()  => S.layers.find(l => l.id === S.selId) || null;
+const getEl  = id  => stage.querySelector('.img-layer[data-id="' + id + '"]');
+
+function refreshEmpty() {
+  emptyState.style.display = S.layers.length ? 'none' : 'flex';
+}
+
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 2400);
+}
+</script>
+</body>
+</html>
