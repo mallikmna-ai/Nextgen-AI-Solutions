@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFTverse - Modern 3D NFT Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #050508;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 8s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        
+        .glass-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        /* 3D Card Container */
+        .card-3d-container {
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+        
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+        }
+        
+        .card-3d-inner {
+            transform: translateZ(30px);
+        }
+        
+        .card-3d-shadow {
+            transform: translateZ(-30px) translateY(20px);
+            filter: blur(20px);
+            opacity: 0.5;
+        }
+        
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotateX(0deg) rotateY(0deg); }
+            25% { transform: translateY(-10px) rotateX(2deg) rotateY(2deg); }
+            50% { transform: translateY(-20px) rotateX(0deg) rotateY(0deg); }
+            75% { transform: translateY(-10px) rotateX(-2deg) rotateY(-2deg); }
+        }
+        
+        .float-3d {
+            animation: float 6s ease-in-out infinite;
+            transform-style: preserve-3d;
+        }
+        
+        /* Glow Effects */
+        .glow-purple {
+            box-shadow: 0 0 60px rgba(102, 126, 234, 0.4), 0 0 100px rgba(118, 75, 162, 0.2);
+        }
+        
+        .glow-pink {
+            box-shadow: 0 0 60px rgba(240, 147, 251, 0.4), 0 0 100px rgba(245, 87, 108, 0.2);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #050508;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #667eea, #764ba2);
+            border-radius: 4px;
+        }
+        
+        /* Navigation */
+        .nav-blur {
+            background: rgba(5, 5, 8, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* 3D Button */
+        .btn-3d {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-3d:hover {
+            transform: translateY(-3px) translateZ(10px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-3d:active {
+            transform: translateY(-1px) translateZ(5px);
+        }
+        
+        /* Particle Canvas */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        /* NFT Card Hover */
+        .nft-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+        
+        .nft-card:hover {
+            transform: translateY(-15px) rotateX(5deg) rotateY(5deg) scale(1.02);
+            box-shadow: 0 30px 60px rgba(102, 126, 234, 0.3);
+        }
+        
+        .nft-card:hover .nft-image {
+            transform: scale(1.1) translateZ(20px);
+        }
+        
+        .nft-image {
+            transition: transform 0.5s ease;
+        }
+        
+        /* Shimmer Effect */
+        .shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shimmer::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.1) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            transform: rotate(30deg);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+        
+        /* Orbit Animation */
+        @keyframes orbit {
+            0% { transform: rotate(0deg) translateX(100px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(100px) rotate(-360deg); }
+        }
+        
+        .orbit-element {
+            animation: orbit 20s linear infinite;
+        }
+        
+        /* Text Reveal */
+        .reveal-text {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+        }
+        
+        /* Gradient Border Animation */
+        .gradient-border-animated {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+        }
+        
+        .gradient-border-animated::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 22px;
+            padding: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe, #667eea);
+            background-size: 300% 300%;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: borderMove 3s linear infinite;
+        }
+        
+        @keyframes borderMove {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+        
+        /* Magnetic Button */
+        .magnetic-btn {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        /* Stats Counter */
+        .stat-value {
+            background: linear-gradient(135deg, #fff 0%, #667eea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Loading Animation */
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        
+        .loader::after {
+            content: '';  
+            box-sizing: border-box;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-bottom-color: #667eea;
+        }
+        
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Three.js Particle Background -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 nav-blur transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3 cursor-pointer group">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-purple-500/30">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </div>
+                    <span class="text-2xl font-bold tracking-tight">NFT<span class="gradient-text">verse</span></span>
+                </div>
+                
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#marketplace" class="text-gray-400 hover:text-white transition-colors text-sm font-medium magnetic-btn">Marketplace</a>
+                    <a href="#collections" class="text-gray-400 hover:text-white transition-colors text-sm font-medium magnetic-btn">Collections</a>
+                    <a href="#artists" class="text-gray-400 hover:text-white transition-colors text-sm font-medium magnetic-btn">Artists</a>
+                    <a href="#community" class="text-gray-400 hover:text-white transition-colors text-sm font-medium magnetic-btn">Community</a>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button class="hidden md:flex items-center gap-2 px-4 py-2 rounded-full glass text-sm font-medium hover:bg-white/10 transition-all magnetic-btn">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Search
+                    </button>
+                    <button class="px-6 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-medium text-sm btn-3d shadow-lg shadow-purple-500/30">
+                        Connect Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with 3D Elements -->
+    <section class="relative min-h-screen flex items-center pt-20 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center relative z-10">
+            <!-- Left Content -->
+            <div class="space-y-8 hero-content">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-purple-300 border border-purple-500/30 shimmer">
+                    <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+                    <span class="relative z-10">Over 50,000+ Digital Artworks</span>
+                </div>
+                
+                <h1 class="text-5xl md:text-7xl font-bold leading-tight reveal-text">
+                    Discover, Collect <br>
+                    <span class="gradient-text">& Sell Extraordinary</span><br>
+                    NFTs in 3D
+                </h1>
+                
+                <p class="text-gray-400 text-lg max-w-lg leading-relaxed">
+                    Experience the next generation of digital art marketplace. Immerse yourself in a 3D world of unique collectibles powered by blockchain technology.
+                </p>
+                
+                <div class="flex flex-wrap gap-4">
+                    <button class="px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold btn-3d shadow-lg shadow-purple-500/40 flex items-center gap-2 group">
+                        Explore 3D Gallery
+                        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                        </svg>
+                    </button>
+                    <button class="px-8 py-4 rounded-full glass text-white font-semibold hover:bg-white/10 transition-all duration-300 border border-white/20 btn-3d">
+                        Create NFT
+                    </button>
+                </div>
+                
+                <!-- Stats -->
+                <div class="flex gap-8 pt-4">
+                    <div class="stat-item">
+                        <div class="text-3xl font-bold stat-value counter" data-target="432">0</div>
+                        <div class="text-gray-500 text-sm mt-1">K+ Collections</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="text-3xl font-bold stat-value counter" data-target="200">0</div>
+                        <div class="text-gray-500 text-sm mt-1">K+ Artists</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="text-3xl font-bold stat-value counter" data-target="10">0</div>
+                        <div class="text-gray-500 text-sm mt-1">K+ Community</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Content - 3D Floating Cards -->
+            <div class="relative h-[600px] hidden lg:block card-3d-container" id="hero-3d-container">
+                <!-- Main 3D Card -->
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 glass-card rounded-3xl p-4 float-3d glow-purple card-3d z-20 cursor-pointer" data-tilt>
+                    <div class="card-3d-inner">
+                        <div class="relative overflow-hidden rounded-2xl mb-4">
+                            <img src="https://picsum.photos/seed/nft1/400/400" alt="NFT Art" class="w-full h-64 object-cover rounded-2xl nft-image">
+                            <div class="absolute top-3 right-3 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-xs font-medium border border-white/20 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                01:05:15
+                            </div>
+                            <div class="absolute bottom-3 left-3 bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-1 rounded-full text-xs font-bold">
+                                LIVE AUCTION
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <h3 class="font-bold text-lg">Cosmic Dreamer #042</h3>
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <img src="https://picsum.photos/seed/avatar1/100/100" class="w-8 h-8 rounded-full border-2 border-purple-500">
+                                    <div>
+                                        <p class="text-xs text-gray-400">Creator</p>
+                                        <p class="text-sm font-medium">@alex_studio</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-400">Current Bid</p>
+                                    <p class="text-sm font-bold text-purple-400">12.35 ETH</p>
+                                </div>
+                            </div>
+                            <button class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium text-sm hover:opacity-90 transition-opacity shadow-lg shadow-purple-500/30">
+                                Place Bid
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Secondary Card 1 -->
+                <div class="absolute top-20 right-0 w-64 glass-card rounded-2xl p-3 float-3d z-10 opacity-80 card-3d cursor-pointer" style="animation-delay: -2s;" data-tilt>
+                    <div class="card-3d-inner">
+                        <img src="https://picsum.photos/seed/nft2/400/400" alt="NFT" class="w-full h-40 object-cover rounded-xl mb-3 nft-image">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium">Neon Genesis</span>
+                            <span class="text-xs text-purple-400 font-bold">8.5 ETH</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Secondary Card 2 -->
+                <div class="absolute bottom-20 left-0 w-64 glass-card rounded-2xl p-3 float-3d z-10 opacity-80 card-3d cursor-pointer" style="animation-delay: -4s;" data-tilt>
+                    <div class="card-3d-inner">
+                        <img src="https://picsum.photos/seed/nft3/400/400" alt="NFT" class="w-full h-40 object-cover rounded-xl mb-3 nft-image">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium">Digital Soul</span>
+                            <span class="text-xs text-pink-400 font-bold">15.2 ETH</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Orbiting Elements -->
+                <div class="absolute top-1/2 left-1/2 w-full h-full pointer-events-none">
+                    <div class="orbit-element absolute w-4 h-4 rounded-full bg-purple-500 blur-sm" style="animation-duration: 15s;"></div>
+                    <div class="orbit-element absolute w-3 h-3 rounded-full bg-pink-500 blur-sm" style="animation-duration: 20s; animation-direction: reverse;"></div>
+                    <div class="orbit-element absolute w-2 h-2 rounded-full bg-blue-500 blur-sm" style="animation-duration: 25s;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Collections with 3D Carousel -->
+    <section id="collections" class="py-24 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex justify-between items-end mb-12">
+                <div>
+                    <h2 class="text-4xl font-bold mb-4">Featured <span class="gradient-text">Collections</span></h2>
+                    <p class="text-gray-400">Handpicked 3D collections from top creators</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="p-3 rounded-full glass hover:bg-white/10 transition-colors magnetic-btn" id="prevBtn">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <button class="p-3 rounded-full glass hover:bg-white/10 transition-colors magnetic-btn" id="nextBtn">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8" id="collectionGrid">
+                <!-- Collection 1 -->
+                <div class="group cursor-pointer">
+                    <div class="glass-card rounded-3xl p-6 transform transition-all duration-500 hover:scale-105 hover:rotate-1">
+                        <div class="relative mb-6">
+                            <img src="https://picsum.photos/seed/collection1/600/400" alt="Collection" class="w-full h-48 object-cover rounded-2xl">
+                            <div class="absolute -bottom-6 left-6 flex -space-x-3">
+                                <img src="https://picsum.photos/seed/c1/100/100" class="w-12 h-12 rounded-full border-4 border-[#0a0a0f]">
+                                <img src="https://picsum.photos/seed/c2/100/100" class="w-12 h-12 rounded-full border-4 border-[#0a0a0f]">
+                                <img src="https://picsum.photos/seed/c3/100/100" class="w-12 h-12 rounded-full border-4 border-[#0a0a0f]">
+                                <div class="w-12 h-12 rounded-full border-4 border-[#0a0a0f] bg-purple-600 flex items-center justify-center text-xs font-bold">+24</div>
+                            </div>
+                        </div>
+                        <div class="pt-6">
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-purple-400 transition-colors">Cyber Punks 3D</h3>
+                            <p class="text-gray-500 text-sm mb-4">Created by <span class="text-purple-400">@cyber_studio</span></p>
+                            <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                                <div>
+                                    <p class="text-xs text-gray-500">Floor Price</p>
+                                    <p class="font-bold">2.5 ETH</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500">Volume</p>
+                                    <p class="font-bold text-purple-400">1.2K ETH</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collection 2 -->
+                <div class="group cursor-pointer">
+                    <div class="glass-card rounded-3xl p-6 transform transition-all duration-500 hover:scale-105 hover:rotate-1">
+                        <div class="relative mb-6">
+                            <img src="https://picsum.photos/seed/collection2/600/400" alt="Collection" class="w-full h-48 object-cover rounded-2xl">
+                            <div class="absolute -bottom-6 left-6 flex -space-x-3">
+                                <img src="https://picsum.photos/seed/c4/100/100" class="w-12 h-12 rounded-full border-4 border-[#0a0a0f]">
+                                <img src="https://picsum.photos/seed/c5/100/100" class="w-12 h-12 rounded-full border-4 border-[#0a0a0f]">
+                                <img src="https://picsum.photos/seed/c6/100/100" class="w-12 h-12 rounded-full border-4 border-[#0a0a0f]">
+                                <div class="w-12 h-12 rounded-full border-4 border-[#0a0a0f] bg-pink-600 flex items-center justify-center text-xs font-bold">+18</div>
+                            </div>
+                        </div>
+                        <div class="pt-6">
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-pink-400 transition-colors">Abstract Dimensions</h3>
+                            <p class="text-gray-500 text-sm mb-4">Created by <span class="text-pink-400">@abstract_art</span></p>
+                            <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                                <div>
+                                    <p class="text-xs text-gray-500">Floor Price</p>
+                                    <p class="font-bold">1.8 ETH</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500">Volume</p>
+                                    <p class="font-bold text-pink-400">856 ETH</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collection 3 -->
+                <div class="group cursor-pointer">
+                    <div class="glass-card rounded-3xl p-6 transform transition-all duration-500 hover:scale-105 hover:rotate-1">
+                        <div class="relative mb-6">
+                            <img src="https://picsum.photos/seed/collection3/600/400" alt="Collection" class="w-full h-48 object-cover rounded-2xl">
+                            <div class="absolute -bottom-6 left-6 flex -space-x-3">
+                                <img src="https://picsum.photos/seed/c7/100/100" class="w-12 h-12 rounded-full border-4 border-[#0a0a0f]">
+                                <img src="https://picsum.photos/seed/c8/100/100" class="w-12 h-12 rounded-full border-4 border-[#0a0a0f]">
+                                <img src="https://picsum.photos/seed/c9/100/100" class="w-12 h-12 rounded-full border-4 border-[#0a0a0f]">
+                                <div class="w-12 h-12 rounded-full border-4 border-[#0a0a0f] bg-blue-600 flex items-center justify-center text-xs font-bold">+42</div>
+                            </div>
+                        </div>
+                        <div class="pt-6">
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-blue-400 transition-colors">Future Worlds</h3>
+                            <p class="text-gray-500 text-sm mb-4">Created by <span class="text-blue-400">@future_lab</span></p>
+                            <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                                <div>
+                                    <p class="text-xs text-gray-500">Floor Price</p>
+                                    <p class="font-bold">3.2 ETH</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500">Volume</p>
+                                    <p class="font-bold text-blue-400">2.4K ETH</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trending NFTs with 3D Cards -->
+    <section id="marketplace" class="py-24 relative">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">Trending <span class="gradient-text">NFTs</span></h2>
+                <p class="text-gray-400">Most popular digital assets this week</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- NFT Card 1 -->
+                <div class="nft-card glass-card rounded-2xl p-4 group cursor-pointer gradient-border-animated">
+                    <div class="relative overflow-hidden rounded-xl mb-4">
+                        <img src="https://picsum.photos/seed/nft4/400/400" alt="NFT" class="w-full h-56 object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+                            <button class="px-6 py-2 rounded-full bg-white text-black font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-105">
+                                View Details
+                            </button>
+                        </div>
+                        <div class="absolute top-3 left-3 bg-purple-600/80 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold">
+                            #1 Trending
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Ethereal Vision #88</h3>
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <img src="https://picsum.photos/seed/avatar2/100/100" class="w-6 h-6 rounded-full">
+                            <span class="text-sm text-gray-400">@visionary</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-white/10">
+                        <div>
+                            <p class="text-xs text-gray-500">Current Bid</p>
+                            <p class="font-bold text-purple-400">5.25 ETH</p>
+                        </div>
+                        <button class="text-xs px-3 py-1.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-colors">
+                            Bid Now
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NFT Card 2 -->
+                <div class="nft-card glass-card rounded-2xl p-4 group cursor-pointer gradient-border-animated">
+                    <div class="relative overflow-hidden rounded-xl mb-4">
+                        <img src="https://picsum.photos/seed/nft5/400/400" alt="NFT" class="w-full h-56 object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+                            <button class="px-6 py-2 rounded-full bg-white text-black font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-105">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Digital Dreams #2049</h3>
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <img src="https://picsum.photos/seed/avatar3/100/100" class="w-6 h-6 rounded-full">
+                            <span class="text-sm text-gray-400">@dreamer</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-white/10">
+                        <div>
+                            <p class="text-xs text-gray-500">Current Bid</p>
+                            <p class="font-bold text-pink-400">8.75 ETH</p>
+                        </div>
+                        <button class="text-xs px-3 py-1.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 hover:bg-pink-500/30 transition-colors">
+                            Bid Now
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NFT Card 3 -->
+                <div class="nft-card glass-card rounded-2xl p-4 group cursor-pointer gradient-border-animated">
+                    <div class="relative overflow-hidden rounded-xl mb-4">
+                        <img src="https://picsum.photos/seed/nft6/400/400" alt="NFT" class="w-full h-56 object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+                            <button class="px-6 py-2 rounded-full bg-white text-black font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-105">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Neon Nights #12</h3>
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <img src="https://picsum.photos/seed/avatar4/100/100" class="w-6 h-6 rounded-full">
+                            <span class="text-sm text-gray-400">@neon_art</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-white/10">
+                        <div>
+                            <p class="text-xs text-gray-500">Current Bid</p>
+                            <p class="font-bold text-blue-400">3.50 ETH</p>
+                        </div>
+                        <button class="text-xs px-3 py-1.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition-colors">
+                            Bid Now
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NFT Card 4 -->
+                <div class="nft-card glass-card rounded-2xl p-4 group cursor-pointer gradient-border-animated">
+                    <div class="relative overflow-hidden rounded-xl mb-4">
+                        <img src="https://picsum.photos/seed/nft7/400/400" alt="NFT" class="w-full h-56 object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+                            <button class="px-6 py-2 rounded-full bg-white text-black font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-105">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Cosmic Flow #44</h3>
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <img src="https://picsum.photos/seed/avatar5/100/100" class="w-6 h-6 rounded-full">
+                            <span class="text-sm text-gray-400">@cosmic</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-white/10">
+                        <div>
+                            <p class="text-xs text-gray-500">Current Bid</p>
+                            <p class="font-bold text-orange-400">6.20 ETH</p>
+                        </div>
+                        <button class="text-xs px-3 py-1.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30 hover:bg-orange-500/30 transition-colors">
+                            Bid Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12">
+                <button class="px-8 py-4 rounded-full glass border border-white/20 text-white font-medium hover:bg-white/10 transition-all duration-300 btn-3d">
+                    View All NFTs
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Top Artists 3D Grid -->
+    <section id="artists" class="py-24 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">Top <span class="gradient-text">Creators</span></h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">Leading digital artists in the NFT space</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <!-- Artist 1 -->
+                <div class="glass-card rounded-2xl p-6 text-center group hover:scale-110 transition-transform duration-300 cursor-pointer card-3d" data-tilt>
+                    <div class="relative mb-4 inline-block">
+                        <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        <img src="https://picsum.photos/seed/artist1/200/200" alt="Artist" class="relative w-20 h-20 rounded-full object-cover border-2 border-purple-500/50">
+                        <div class="absolute bottom-0 right-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-2 border-[#0a0a0f]">
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="font-bold mb-1">Alex Morgan</h3>
+                    <p class="text-gray-500 text-sm mb-3">@alex_m</p>
+                    <div class="flex justify-center gap-4 text-sm mb-4">
+                        <div>
+                            <span class="block font-bold text-purple-400">12.5K</span>
+                            <span class="text-xs text-gray-500">Followers</span>
+                        </div>
+                        <div>
+                            <span class="block font-bold text-pink-400">842</span>
+                            <span class="text-xs text-gray-500">Items</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 rounded-full bg-purple-500/20 text-purple-300 text-sm font-medium hover:bg-purple-500/30 transition-colors border border-purple-500/30">
+                        Follow
+                    </button>
+                </div>
+
+                <!-- Artist 2 -->
+                <div class="glass-card rounded-2xl p-6 text-center group hover:scale-110 transition-transform duration-300 cursor-pointer card-3d" data-tilt>
+                    <div class="relative mb-4 inline-block">
+                        <div class="absolute inset-0 bg-gradient-to-r from-pink-600 to-red-600 rounded-full blur opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        <img src="https://picsum.photos/seed/artist2/200/200" alt="Artist" class="relative w-20 h-20 rounded-full object-cover border-2 border-pink-500/50">
+                        <div class="absolute bottom-0 right-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-2 border-[#0a0a0f]">
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="font-bold mb-1">Sarah Chen</h3>
+                    <p class="text-gray-500 text-sm mb-3">@sarah_art</p>
+                    <div class="flex justify-center gap-4 text-sm mb-4">
+                        <div>
+                            <span class="block font-bold text-purple-400">8.2K</span>
+                            <span class="text-xs text-gray-500">Followers</span>
+                        </div>
+                        <div>
+                            <span class="block font-bold text-pink-400">567</span>
+                            <span class="text-xs text-gray-500">Items</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 rounded-full bg-purple-500/20 text-purple-300 text-sm font-medium hover:bg-purple-500/30 transition-colors border border-purple-500/30">
+                        Follow
+                    </button>
+                </div>
+
+                <!-- Artist 3 -->
+                <div class="glass-card rounded-2xl p-6 text-center group hover:scale-110 transition-transform duration-300 cursor-pointer card-3d" data-tilt>
+                    <div class="relative mb-4 inline-block">
+                        <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        <img src="https://picsum.photos/seed/artist3/200/200" alt="Artist" class="relative w-20 h-20 rounded-full object-cover border-2 border-blue-500/50">
+                        <div class="absolute bottom-0 right-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-2 border-[#0a0a0f]">
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="font-bold mb-1">Mike Ross</h3>
+                    <p class="text-gray-500 text-sm mb-3">@mike_nft</p>
+                    <div class="flex justify-center gap-4 text-sm mb-4">
+                        <div>
+                            <span class="block font-bold text-purple-400">15.1K</span>
+                            <span class="text-xs text-gray-500">Followers</span>
+                        </div>
+                        <div>
+                            <span class="block font-bold text-pink-400">1.2K</span>
+                            <span class="text-xs text-gray-500">Items</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 rounded-full bg-purple-500/20 text-purple-300 text-sm font-medium hover:bg-purple-500/30 transition-colors border border-purple-500/30">
+                        Follow
+                    </button>
+                </div>
+
+                <!-- Artist 4 -->
+                <div class="glass-card rounded-2xl p-6 text-center group hover:scale-110 transition-transform duration-300 cursor-pointer card-3d" data-tilt>
+                    <div class="relative mb-4 inline-block">
+                        <div class="absolute inset-0 bg-gradient-to-r from-green-600 to-blue-600 rounded-full blur opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        <img src="https://picsum.photos/seed/artist4/200/200" alt="Artist" class="relative w-20 h-20 rounded-full object-cover border-2 border-green-500/50">
+                        <div class="absolute bottom-0 right-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-2 border-[#0a0a0f]">
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="font-bold mb-1">Emma Wilson</h3>
+                    <p class="text-gray-500 text-sm mb-3">@emma_w</p>
+                    <div class="flex justify-center gap-4 text-sm mb-4">
+                        <div>
+                            <span class="block font-bold text-purple-400">9.8K</span>
+                            <span class="text-xs text-gray-500">Followers</span>
+                        </div>
+                        <div>
+                            <span class="block font-bold text-pink-400">723</span>
+                            <span class="text-xs text-gray-500">Items</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 rounded-full bg-purple-500/20 text-purple-300 text-sm font-medium hover:bg-purple-500/30 transition-colors border border-purple-500/30">
+                        Follow
+                    </button>
+                </div>
+
+                <!-- Artist 5 -->
+                <div class="glass-card rounded-2xl p-6 text-center group hover:scale-110 transition-transform duration-300 cursor-pointer card-3d" data-tilt>
+                    <div class="relative mb-4 inline-block">
+                        <div class="absolute inset-0 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full blur opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        <img src="https://picsum.photos/seed/artist5/200/200" alt="Artist" class="relative w-20 h-20 rounded-full object-cover border-2 border-yellow-500/50">
+                        <div class="absolute bottom-0 right-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-2 border-[#0a0a0f]">
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="font-bold mb-1">David Kim</h3>
+                    <p class="text-gray-500 text-sm mb-3">@david_k</p>
+                    <div class="flex justify-center gap-4 text-sm mb-4">
+                        <div>
+                            <span class="block font-bold text-purple-400">11.3K</span>
+                            <span class="text-xs text-gray-500">Followers</span>
+                        </div>
+                        <div>
+                            <span class="block font-bold text-pink-400">934</span>
+                            <span class="text-xs text-gray-500">Items</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 rounded-full bg-purple-500/20 text-purple-300 text-sm font-medium hover:bg-purple-500/30 transition-colors border border-purple-500/30">
+                        Follow
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works - 3D Steps -->
+    <section class="py-24 relative">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">How It <span class="gradient-text">Works</span></h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">Get started with NFTs in three simple steps</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 relative">
+                <!-- Connection Lines -->
+                <div class="hidden md:block absolute top-1/2 left-1/3 w-1/3 h-0.5 bg-gradient-to-r from-purple-600 to-pink-600 transform -translate-y-1/2"></div>
+                <div class="hidden md:block absolute top-1/2 left-2/3 w-1/3 h-0.5 bg-gradient-to-r from-pink-600 to-blue-600 transform -translate-y-1/2"></div>
+                
+                <!-- Step 1 -->
+                <div class="glass-card rounded-3xl p-8 text-center relative group hover:scale-105 transition-transform duration-300 card-3d" data-tilt>
+                    <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-xl font-bold border-4 border-[#050508] shadow-lg shadow-purple-500/50 z-10">
+                        1
+                    </div>
+                    <div class="mt-8 mb-6 w-24 h-24 mx-auto rounded-2xl bg-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-12 h-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Connect Wallet</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Link your MetaMask, WalletConnect, or Coinbase wallet securely to start trading.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="glass-card rounded-3xl p-8 text-center relative group hover:scale-105 transition-transform duration-300 card-3d" data-tilt>
+                    <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 rounded-full bg-gradient-to-br from-pink-600 to-red-600 flex items-center justify-center text-xl font-bold border-4 border-[#050508] shadow-lg shadow-pink-500/50 z-10">
+                        2
+                    </div>
+                    <div class="mt-8 mb-6 w-24 h-24 mx-auto rounded-2xl bg-pink-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-12 h-12 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Create & Mint</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Upload your artwork, add metadata, and mint your NFT with one click.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="glass-card rounded-3xl p-8 text-center relative group hover:scale-105 transition-transform duration-300 card-3d" data-tilt>
+                    <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-xl font-bold border-4 border-[#050508] shadow-lg shadow-blue-500/50 z-10">
+                        3
+                    </div>
+                    <div class="mt-8 mb-6 w-24 h-24 mx-auto rounded-2xl bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Sell & Trade</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">List on marketplace, auction to highest bidder, or trade with collectors worldwide.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="py-24 relative">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="glass-card rounded-3xl p-12 text-center relative overflow-hidden">
+                <!-- Animated Background -->
+                <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-pink-600/20 to-blue-600/20 animate-pulse"></div>
+                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-full h-full bg-gradient-to-b from-purple-500/10 to-transparent pointer-events-none"></div>
+                
+                <div class="relative z-10">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Never Miss a <span class="gradient-text">Drop</span></h2>
+                    <p class="text-gray-400 mb-8 max-w-lg mx-auto">Subscribe for exclusive access to limited NFT drops and early creator announcements.</p>
+                    
+                    <form class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto" onsubmit="event.preventDefault(); showNotification('Thanks for subscribing!');">
+                        <input type="email" placeholder="Enter your email" class="flex-1 px-6 py-4 rounded-full bg-black/30 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors">
+                        <button type="submit" class="px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold btn-3d shadow-lg shadow-purple-500/40 whitespace-nowrap">
+                            Subscribe
+                        </button>
+                    </form>
+                    
+                    <div class="flex justify-center gap-6 mt-8">
+                        <a href="#" class="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all hover:scale-110 magnetic-btn">
+                            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all hover:scale-110 magnetic-btn">
+                            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all hover:scale-110 magnetic-btn">
+                            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all hover:scale-110 magnetic-btn">
+                            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 pt-16 pb-8 relative z-10">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-12 mb-12">
+                <div class="col-span-2">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
+                        </div>
+                        <span class="text-xl font-bold">NFT<span class="gradient-text">verse</span></span>
+                    </div>
+                    <p class="text-gray-500 text-sm leading-relaxed max-w-sm mb-6">
+                        The world's premier 3D NFT marketplace. Discover, collect, and trade extraordinary digital assets in an immersive Web3 experience.
+                    </p>
+                    <div class="flex gap-4">
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            <span>MetaMask</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            <span>WalletConnect</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                            </svg>
+                            <span>Coinbase</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Marketplace</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">All NFTs</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">3D Art</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Collectibles</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Photography</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Music</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Company</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">About</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Terms</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Privacy</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-gray-600 text-sm">© 2024 NFTverse. All rights reserved.</p>
+                <div class="flex gap-6 text-sm text-gray-500">
+                    <a href="#" class="hover:text-white transition-colors">Privacy</a>
+                    <a href="#" class="hover:text-white transition-colors">Terms</a>
+                    <a href="#" class="hover:text-white transition-colors">Sitemap</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed bottom-8 right-8 glass-card px-6 py-4 rounded-2xl transform translate-y-24 transition-transform duration-300 z-50 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+        </div>
+        <span id="notification-text" class="font-medium">Notification</span>
+    </div>
+
+    <script>
+        // Initialize GSAP
+        gsap.registerPlugin(ScrollTrigger);
+        
+        // Three.js Particle Background
+        const canvas = document.getElementById('particle-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        
+        // Create particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 800;
+        const posArray = new Float32Array(particlesCount * 3);
+        const colorsArray = new Float32Array(particlesCount * 3);
+        
+        for(let i = 0; i < particlesCount * 3; i += 3) {
+            // Positions
+            posArray[i] = (Math.random() - 0.5) * 50;
+            posArray[i+1] = (Math.random() - 0.5) * 50;
+            posArray[i+2] = (Math.random() - 0.5) * 50;
+            
+            // Colors (purple, pink, blue gradient)
+            const colorChoice = Math.random();
+            if(colorChoice < 0.33) {
+                colorsArray[i] = 0.4;     // R
+                colorsArray[i+1] = 0.34;  // G
+                colorsArray[i+2] = 0.92;  // B (Purple)
+            } else if(colorChoice < 0.66) {
+                colorsArray[i] = 0.94;    // R
+                colorsArray[i+1] = 0.3;   // G
+                colorsArray[i+2] = 0.6;   // B (Pink)
+            } else {
+                colorsArray[i] = 0.2;     // R
+                colorsArray[i+1] = 0.6;   // G
+                colorsArray[i+2] = 1;     // B (Blue)
+            }
+        }
+        
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
+        
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.05,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+        
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+        
+        camera.position.z = 30;
+        
+        // Mouse interaction
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+        
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - windowHalfX) / 100;
+            mouseY = (event.clientY - windowHalfY) / 100;
+        });
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            targetX = mouseX * 0.5;
+            targetY = mouseY * 0.5;
+            
+            particlesMesh.rotation.y += 0.001;
+            particlesMesh.rotation.x += 0.0005;
+            
+            particlesMesh.rotation.y += (targetX - particlesMesh.rotation.y) * 0.05;
+            particlesMesh.rotation.x += (targetY - particlesMesh.rotation.x) * 0.05;
+            
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // 3D Tilt Effect for Cards
+        document.querySelectorAll('[data-tilt]').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 10;
+                const rotateY = (centerX - x) / 10;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+            });
+        });
+        
+        // Hero Content Animation
+        gsap.from(".hero-content > *", {
+            y: 50,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.2,
+            ease: "power3.out"
+        });
+        
+        // Counter Animation
+        const counters = document.querySelectorAll('.counter');
+        counters.forEach(counter => {
+            const target = +counter.getAttribute('data-target');
+            gsap.to(counter, {
+                scrollTrigger: {
+                    trigger: counter,
+                    start: "top 80%",
+                    once: true
+                },
+                innerHTML: target,
+                duration: 2,
+                snap: { innerHTML: 1 },
+                ease: "power1.out",
+                onUpdate: function() {
+                    counter.innerHTML = Math.ceil(this.targets()[0].innerHTML) + 'K+';
+                }
+            });
+        });
+        
+        // Scroll Animations
+        gsap.utils.toArray('.nft-card').forEach((card, i) => {
+            gsap.from(card, {
+                scrollTrigger: {
+                    trigger: card,
+                    start: "top 85%",
+                    toggleActions: "play none none reverse"
+                },
+                y: 50,
+                opacity: 0,
+                duration: 0.6,
+                delay: i * 0.1,
+                ease: "power3.out"
+            });
+        });
+        
+        // Magnetic Button Effect
+        document.querySelectorAll('.magnetic-btn').forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                
+                btn.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+            });
+            
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'translate(0, 0)';
+            });
+        });
+        
+        // Navbar Scroll Effect
+        let lastScroll = 0;
+        window.addEventListener("scroll", () => {
+            const navbar = document.getElementById("navbar");
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 100) {
+                navbar.classList.add("nav-blur");
+            } else {
+                navbar.classList.remove("nav-blur");
+            }
+            
+            lastScroll = currentScroll;
+        });
+        
+        // Smooth Scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Notification Function
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notification-text');
+            notificationText.textContent = message;
+            notification.classList.remove('translate-y-24');
+            
+            setTimeout(() => {
+                notification.classList.add('translate-y-24');
+            }, 3000);
+        }
+        
+        // Parallax Effect for Hero Cards
+        document.addEventListener('mousemove', (e) => {
+            const cards = document.querySelectorAll('.float-3d');
+            const x = (window.innerWidth - e.pageX) / 50;
+            const y = (window.innerHeight - e.pageY) / 50;
+            
+            cards.forEach((card, index) => {
+                const speed = (index + 1) * 0.5;
+                card.style.transform = `translateX(${x * speed}px) translateY(${y * speed}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
