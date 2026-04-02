@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHRONOS | Luxury Timepieces</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-charcoal: #141414;
+            --gold: #C9A961;
+            --gold-light: #E5D5A8;
+            --silver: #A8A8A8;
+            --text-white: #FFFFFF;
+            --text-gray: #888888;
+            --accent: #1a1a1a;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-white);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 4px;
+        }
+
+        /* Loader */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+        .loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            color: var(--gold);
+            letter-spacing: 0.5em;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1.5rem 5%;
+            background: transparent;
+            transition: all 0.4s ease;
+        }
+        nav.scrolled {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 1rem 5%;
+            border-bottom: 1px solid rgba(201, 169, 97, 0.1);
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: var(--gold);
+            letter-spacing: 0.3em;
+            text-decoration: none;
+            position: relative;
+        }
+        .logo::after {
+            content: '®';
+            font-size: 0.6rem;
+            position: absolute;
+            top: 0;
+            right: -1rem;
+            color: var(--text-gray);
+        }
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+            list-style: none;
+        }
+        .nav-links a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.85rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--gold);
+            transition: width 0.3s ease;
+        }
+        .nav-links a:hover {
+            color: var(--gold);
+        }
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        .nav-actions {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        .nav-icon {
+            color: var(--text-gray);
+            cursor: pointer;
+            transition: color 0.3s ease;
+            font-size: 1.2rem;
+        }
+        .nav-icon:hover {
+            color: var(--gold);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        .hero-bg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.6;
+            animation: slowZoom 20s infinite alternate;
+        }
+        @keyframes slowZoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.4) 50%, rgba(10,10,10,0.8) 100%);
+            z-index: 1;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 5%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        .hero-text {
+            animation: fadeInUp 1s ease;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .hero-subtitle {
+            color: var(--gold);
+            font-size: 0.9rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+        .hero-title {
+            font-size: clamp(3rem, 6vw, 5rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            font-weight: 300;
+        }
+        .hero-title span {
+            display: block;
+            color: var(--gold);
+        }
+        .hero-description {
+            color: var(--text-gray);
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+        }
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem 3rem;
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            text-decoration: none;
+            font-size: 0.85rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--gold);
+            transition: left 0.4s ease;
+            z-index: -1;
+        }
+        .hero-cta:hover {
+            color: var(--bg-dark);
+        }
+        .hero-cta:hover::before {
+            left: 0;
+        }
+        .hero-watch {
+            position: relative;
+            animation: floatWatch 6s ease-in-out infinite;
+        }
+        @keyframes floatWatch {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+        .hero-watch img {
+            width: 100%;
+            max-width: 600px;
+            filter: drop-shadow(0 30px 60px rgba(0,0,0,0.5));
+            animation: watchGlow 3s ease-in-out infinite alternate;
+        }
+        @keyframes watchGlow {
+            0% { filter: drop-shadow(0 30px 60px rgba(0,0,0,0.5)) brightness(1); }
+            100% { filter: drop-shadow(0 40px 80px rgba(201,169,97,0.2)) brightness(1.1); }
+        }
+        .scroll-indicator {
+            position: absolute;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-gray);
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+        .scroll-line {
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, var(--gold), transparent);
+        }
+
+        /* Featured Collection */
+        .featured {
+            padding: 8rem 5%;
+            background: var(--bg-charcoal);
+            position: relative;
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        .section-tag {
+            color: var(--gold);
+            font-size: 0.85rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        .section-title {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 300;
+        }
+        .watch-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+        }
+        .watch-card {
+            position: relative;
+            background: var(--accent);
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+        .watch-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+        .watch-card-image {
+            position: relative;
+            height: 400px;
+            overflow: hidden;
+        }
+        .watch-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+        .watch-card:hover .watch-card-image img {
+            transform: scale(1.1);
+        }
+        .watch-card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(10,10,10,0.9) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 2rem;
+        }
+        .watch-card:hover .watch-card-overlay {
+            opacity: 1;
+        }
+        .quick-view {
+            padding: 0.8rem 2rem;
+            background: var(--gold);
+            color: var(--bg-dark);
+            border: none;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transform: translateY(20px);
+            transition: transform 0.4s ease;
+        }
+        .watch-card:hover .quick-view {
+            transform: translateY(0);
+        }
+        .watch-card-info {
+            padding: 2rem;
+        }
+        .watch-card-brand {
+            color: var(--gold);
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        .watch-card-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .watch-card-price {
+            color: var(--text-gray);
+            font-size: 1.1rem;
+        }
+        .watch-card-price span {
+            color: var(--gold);
+            font-size: 1.3rem;
+        }
+
+        /* Craftsmanship Section */
+        .craftsmanship {
+            padding: 8rem 5%;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+        }
+        .craft-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6rem;
+            align-items: center;
+        }
+        .craft-images {
+            position: relative;
+            height: 600px;
+        }
+        .craft-image-main {
+            position: absolute;
+            width: 70%;
+            height: 80%;
+            top: 0;
+            left: 0;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            animation: slideInLeft 1s ease;
+        }
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .craft-image-main img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .craft-image-secondary {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            bottom: 0;
+            right: 0;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 4px solid var(--bg-dark);
+            animation: slideInRight 1s ease 0.3s both;
+        }
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .craft-image-secondary img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .craft-text {
+            animation: fadeInUp 1s ease 0.5s both;
+        }
+        .craft-text h2 {
+            font-size: clamp(2.5rem, 4vw, 3.5rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+        .craft-text p {
+            color: var(--text-gray);
+            font-size: 1.1rem;
+            line-height: 1.9;
+            margin-bottom: 2rem;
+        }
+        .craft-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        .craft-feature {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        .craft-feature-icon {
+            width: 50px;
+            height: 50px;
+            border: 1px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold);
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .craft-feature-text h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        .craft-feature-text p {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            margin: 0;
+        }
+
+        /* New Arrivals Marquee */
+        .marquee-section {
+            padding: 4rem 0;
+            background: var(--bg-charcoal);
+            overflow: hidden;
+            border-top: 1px solid rgba(201,169,97,0.1);
+            border-bottom: 1px solid rgba(201,169,97,0.1);
+        }
+        .marquee-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 0 5%;
+        }
+        .marquee-container {
+            display: flex;
+            animation: marquee 30s linear infinite;
+        }
+        .marquee-container:hover {
+            animation-play-state: paused;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .marquee-item {
+            flex-shrink: 0;
+            width: 300px;
+            margin: 0 1.5rem;
+            position: relative;
+        }
+        .marquee-item img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 4px;
+            filter: grayscale(100%);
+            transition: filter 0.4s ease;
+        }
+        .marquee-item:hover img {
+            filter: grayscale(0%);
+        }
+        .marquee-item-info {
+            padding: 1.5rem 0;
+            text-align: center;
+        }
+        .marquee-item-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+        }
+        .marquee-item-price {
+            color: var(--gold);
+            font-size: 0.9rem;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 8rem 5%;
+            background: linear-gradient(135deg, var(--bg-charcoal) 0%, var(--bg-dark) 100%);
+        }
+        .testimonial-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+        }
+        .testimonial-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(201,169,97,0.1);
+            border-radius: 4px;
+            padding: 3rem;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+        .testimonial-card:hover {
+            border-color: rgba(201,169,97,0.3);
+            transform: translateY(-5px);
+        }
+        .testimonial-card::before {
+            content: '"';
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 6rem;
+            color: var(--gold);
+            opacity: 0.2;
+            line-height: 1;
+        }
+        .testimonial-text {
+            font-size: 1.1rem;
+            line-height: 1.9;
+            color: var(--text-gray);
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .author-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--gold);
+        }
+        .author-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .author-info h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+        }
+        .author-info p {
+            color: var(--gold);
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* Newsletter */
+        .newsletter {
+            padding: 6rem 5%;
+            background: var(--bg-dark);
+            border-top: 1px solid rgba(201,169,97,0.1);
+        }
+        .newsletter-content {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .newsletter h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .newsletter p {
+            color: var(--text-gray);
+            margin-bottom: 2rem;
+        }
+        .newsletter-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .newsletter-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(201,169,97,0.2);
+            color: var(--text-white);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        .newsletter-input:focus {
+            border-color: var(--gold);
+        }
+        .newsletter-input::placeholder {
+            color: var(--text-gray);
+        }
+        .newsletter-btn {
+            padding: 1rem 2.5rem;
+            background: var(--gold);
+            color: var(--bg-dark);
+            border: none;
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .newsletter-btn:hover {
+            background: var(--gold-light);
+            transform: translateY(-2px);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--bg-charcoal);
+            padding: 5rem 5% 2rem;
+            border-top: 1px solid rgba(201,169,97,0.1);
+        }
+        .footer-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 4rem;
+            margin-bottom: 4rem;
+        }
+        .footer-brand .logo {
+            margin-bottom: 1.5rem;
+        }
+        .footer-brand p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            max-width: 300px;
+        }
+        .footer-column h4 {
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            color: var(--gold);
+        }
+        .footer-column ul {
+            list-style: none;
+        }
+        .footer-column li {
+            margin-bottom: 0.8rem;
+        }
+        .footer-column a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        .footer-column a:hover {
+            color: var(--gold);
+        }
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(201,169,97,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .footer-bottom p {
+            color: var(--text-gray);
+            font-size: 0.85rem;
+        }
+        .social-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        .social-links a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+        .social-links a:hover {
+            color: var(--gold);
+        }
+
+        /* Animations on Scroll */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .hero-watch {
+                order: -1;
+            }
+            .hero-watch img {
+                max-width: 400px;
+            }
+            .craft-content {
+                grid-template-columns: 1fr;
+            }
+            .craft-images {
+                height: 400px;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .watch-grid {
+                grid-template-columns: 1fr;
+            }
+            .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            .newsletter-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="loader-text">CHRONOS</div>
+    </div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">CHRONOS</a>
+            <ul class="nav-links">
+                <li><a href="#collection">Collection</a></li>
+                <li><a href="#craftsmanship">Craftsmanship</a></li>
+                <li><a href="#new">New Arrivals</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+            <div class="nav-actions">
+                <span class="nav-icon">🔍</span>
+                <span class="nav-icon">♥</span>
+                <span class="nav-icon">🛒</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg">
+            <img src="https://picsum.photos/seed/luxury-watch-bg/1920/1080" alt="Luxury Watch Background">
+        </div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-text">
+                <span class="hero-subtitle">Swiss Made Excellence</span>
+                <h1 class="hero-title">
+                    Timeless
+                    <span>Elegance</span>
+                </h1>
+                <p class="hero-description">
+                    Discover our curated collection of precision-crafted timepieces. 
+                    Where heritage meets innovation, and every second is a masterpiece.
+                </p>
+                <a href="#collection" class="hero-cta">
+                    Explore Collection →
+                </a>
+            </div>
+            <div class="hero-watch">
+                <img src="https://picsum.photos/seed/hero-watch/600/800" alt="Luxury Watch">
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span>Scroll</span>
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <!-- Featured Collection -->
+    <section class="featured" id="collection">
+        <div class="section-header animate-on-scroll">
+            <span class="section-tag">The Collection</span>
+            <h2 class="section-title">Featured Timepieces</h2>
+        </div>
+        <div class="watch-grid">
+            <div class="watch-card animate-on-scroll">
+                <div class="watch-card-image">
+                    <img src="https://picsum.photos/seed/watch1/400/500" alt="Watch">
+                    <div class="watch-card-overlay">
+                        <button class="quick-view">Quick View</button>
+                    </div>
+                </div>
+                <div class="watch-card-info">
+                    <div class="watch-card-brand">Royal Oak</div>
+                    <h3 class="watch-card-name">Midnight Chronograph</h3>
+                    <div class="watch-card-price"><span>$12,500</span></div>
+                </div>
+            </div>
+            <div class="watch-card animate-on-scroll">
+                <div class="watch-card-image">
+                    <img src="https://picsum.photos/seed/watch2/400/500" alt="Watch">
+                    <div class="watch-card-overlay">
+                        <button class="quick-view">Quick View</button>
+                    </div>
+                </div>
+                <div class="watch-card-info">
+                    <div class="watch-card-brand">Nautilus</div>
+                    <h3 class="watch-card-name">Ocean Master Diver</h3>
+                    <div class="watch-card-price"><span>$8,900</span></div>
+                </div>
+            </div>
+            <div class="watch-card animate-on-scroll">
+                <div class="watch-card-image">
+                    <img src="https://picsum.photos/seed/watch3/400/500" alt="Watch">
+                    <div class="watch-card-overlay">
+                        <button class="quick-view">Quick View</button>
+                    </div>
+                </div>
+                <div class="watch-card-info">
+                    <div class="watch-card-brand">Heritage</div>
+                    <h3 class="watch-card-name">Classic Gold Edition</h3>
+                    <div class="watch-card-price"><span>$15,200</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Craftsmanship Section -->
+    <section class="craftsmanship" id="craftsmanship">
+        <div class="craft-content">
+            <div class="craft-images">
+                <div class="craft-image-main">
+                    <img src="https://picsum.photos/seed/craft1/600/800" alt="Watchmaking">
+                </div>
+                <div class="craft-image-secondary">
+                    <img src="https://picsum.photos/seed/craft2/400/400" alt="Detail">
+                </div>
+            </div>
+            <div class="craft-text">
+                <span class="section-tag">Our Heritage</span>
+                <h2>Precision in Every Detail</h2>
+                <p>
+                    For over a century, we have been at the forefront of haute horlogerie. 
+                    Each timepiece is meticulously assembled by master watchmakers, combining 
+                    traditional techniques with cutting-edge innovation. From the intricate 
+                    movement to the polished case, every element reflects our uncompromising 
+                    commitment to excellence.
+                </p>
+                <div class="craft-features">
+                    <div class="craft-feature">
+                        <div class="craft-feature-icon">◈</div>
+                        <div class="craft-feature-text">
+                            <h4>Swiss Movement</h4>
+                            <p>Certified chronometer precision</p>
+                        </div>
+                    </div>
+                    <div class="craft-feature">
+                        <div class="craft-feature-icon">◈</div>
+                        <div class="craft-feature-text">
+                            <h4>Sapphire Crystal</h4>
+                            <p>Scratch-resistant clarity</p>
+                        </div>
+                    </div>
+                    <div class="craft-feature">
+                        <div class="craft-feature-icon">◈</div>
+                        <div class="craft-feature-text">
+                            <h4>18K Gold</h4>
+                            <p>Premium precious metals</p>
+                        </div>
+                    </div>
+                    <div class="craft-feature">
+                        <div class="craft-feature-icon">◈</div>
+                        <div class="craft-feature-text">
+                            <h4>5-Year Warranty</h4>
+                            <p>Lifetime service guarantee</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- New Arrivals Marquee -->
+    <section class="marquee-section" id="new">
+        <div class="marquee-header animate-on-scroll">
+            <span class="section-tag">Just Arrived</span>
+            <h2 class="section-title">New Collection 2026</h2>
+        </div>
+        <div class="marquee-container">
+            <!-- First set -->
+            <div class="marquee-item">
+                <img src="https://picsum.photos/seed/new1/300/300" alt="Watch">
+                <div class="marquee-item-info">
+                    <div class="marquee-item-name">Astral Pilot</div>
+                    <div class="marquee-item-price">$9,800</div>
+                </div>
+            </div>
+            <div class="marquee-item">
+                <img src="https://picsum.photos/seed/new2/300/300" alt="Watch">
+                <div class="marquee-item-info">
+                    <div class="marquee-item-name">Deep Sea Pro</div>
+                    <div class="marquee-item-price">$11,200</div>
+                </div>
+            </div>
+            <div class="marquee-item">
+                <img src="https://picsum.photos/seed/new3/300/300" alt="Watch">
+                <div class="marquee-item-info">
+                    <div class="marquee-item-name">Grand Complication</div>
+                    <div class="marquee-item-price">$24,500</div>
+                </div>
+            </div>
+            <div class="marquee-item">
+                <img src="https://picsum.photos/seed/new4/300/300" alt="Watch">
+                <div class="marquee-item-info">
+                    <div class="marquee-item-name">Vintage 1960</div>
+                    <div class="marquee-item-price">$18,900</div>
+                </div>
+            </div>
+            <div class="marquee-item">
+                <img src="https://picsum.photos/seed/new5/300/300" alt="Watch">
+                <div class="marquee-item-info">
+                    <div class="marquee-item-name">Tourbillon Elite</div>
+                    <div class="marquee-item-price">$42,000</div>
+                </div>
+            </div>
+            <!-- Duplicate for seamless loop -->
+            <div class="marquee-item">
+                <img src="https://picsum.photos/seed/new1/300/300" alt="Watch">
+                <div class="marquee-item-info">
+                    <div class="marquee-item-name">Astral Pilot</div>
+                    <div class="marquee-item-price">$9,800</div>
+                </div>
+            </div>
+            <div class="marquee-item">
+                <img src="https://picsum.photos/seed/new2/300/300" alt="Watch">
+                <div class="marquee-item-info">
+                    <div class="marquee-item-name">Deep Sea Pro</div>
+                    <div class="marquee-item-price">$11,200</div>
+                </div>
+            </div>
+            <div class="marquee-item">
+                <img src="https://picsum.photos/seed/new3/300/300" alt="Watch">
+                <div class="marquee-item-info">
+                    <div class="marquee-item-name">Grand Complication</div>
+                    <div class="marquee-item-price">$24,500</div>
+                </div>
+            </div>
+            <div class="marquee-item">
+                <img src="https://picsum.photos/seed/new4/300/300" alt="Watch">
+                <div class="marquee-item-info">
+                    <div class="marquee-item-name">Vintage 1960</div>
+                    <div class="marquee-item-price">$18,900</div>
+                </div>
+            </div>
+            <div class="marquee-item">
+                <img src="https://picsum.photos/seed/new5/300/300" alt="Watch">
+                <div class="marquee-item-info">
+                    <div class="marquee-item-name">Tourbillon Elite</div>
+                    <div class="marquee-item-price">$42,000</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials" id="about">
+        <div class="section-header animate-on-scroll">
+            <span class="section-tag">Testimonials</span>
+            <h2 class="section-title">Collector's Stories</h2>
+        </div>
+        <div class="testimonial-grid">
+            <div class="testimonial-card animate-on-scroll">
+                <p class="testimonial-text">
+                    The attention to detail is extraordinary. My Chronos timepiece has become 
+                    more than a watch—it's a legacy piece that I'll pass down to my son. 
+                    The craftsmanship is simply unmatched.
+                </p>
+                <div class="testimonial-author">
+                    <div class="author-image">
+                        <img src="https://picsum.photos/seed/person1/100/100" alt="James">
+                    </div>
+                    <div class="author-info">
+                        <h4>James Whitmore</h4>
+                        <p>Collector since 2015</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card animate-on-scroll">
+                <p class="testimonial-text">
+                    As a pilot, precision is everything. My Astral Pilot has accompanied me 
+                    across continents, maintaining perfect time through every timezone. 
+                    A true instrument of excellence.
+                </p>
+                <div class="testimonial-author">
+                    <div class="author-image">
+                        <img src="https://picsum.photos/seed/person2/100/100" alt="Elena">
+                    </div>
+                    <div class="author-info">
+                        <h4>Elena Rodriguez</h4>
+                        <p>Commercial Pilot</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card animate-on-scroll">
+                <p class="testimonial-text">
+                    I've collected watches for three decades, and Chronos stands apart. 
+                    The fusion of traditional techniques with modern design creates 
+                    something truly timeless.
+                </p>
+                <div class="testimonial-author">
+                    <div class="author-image">
+                        <img src="https://picsum.photos/seed/person3/100/100" alt="Marcus">
+                    </div>
+                    <div class="author-info">
+                        <h4>Marcus Chen</h4>
+                        <p>Horology Expert</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="newsletter">
+        <div class="newsletter-content animate-on-scroll">
+            <span class="section-tag">Stay Connected</span>
+            <h2>Join the Inner Circle</h2>
+            <p>Be the first to discover new releases, exclusive events, and heritage stories.</p>
+            <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Thank you for subscribing!');">
+                <input type="email" class="newsletter-input" placeholder="Enter your email" required>
+                <button type="submit" class="newsletter-btn">Subscribe</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="#" class="logo">CHRONOS</a>
+                <p>Crafting precision timepieces since 1895. 
+                   Where heritage meets innovation in the art of horology.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Collection</h4>
+                <ul>
+                    <li><a href="#">Royal Oak</a></li>
+                    <li><a href="#">Nautilus</a></li>
+                    <li><a href="#">Heritage</a></li>
+                    <li><a href="#">Limited Editions</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>House</h4>
+                <ul>
+                    <li><a href="#">Our Story</a></li>
+                    <li><a href="#">Craftsmanship</a></li>
+                    <li><a href="#">Boutiques</a></li>
+                    <li><a href="#">Careers</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Service</h4>
+                <ul>
+                    <li><a href="#">Maintenance</a></li>
+                    <li><a href="#">Authentication</a></li>
+                    <li><a href="#">Warranty</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 CHRONOS. All rights reserved.</p>
+            <div class="social-links">
+                <a href="#">IG</a>
+                <a href="#">FB</a>
+                <a href="#">TW</a>
+                <a href="#">YT</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Loader
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+            }, 1500);
+        });
+
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Parallax effect for hero
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const heroBg = document.querySelector('.hero-bg img');
+            if (heroBg) {
+                heroBg.style.transform = `translateY(${scrolled * 0.5}px) scale(1.1)`;
+            }
+        });
+
+        // Quick view button interaction
+        document.querySelectorAll('.quick-view').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                alert('Quick view feature coming soon!');
+            });
+        });
+    </script>
+</body>
+</html>
