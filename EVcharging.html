@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoltAuto - Premium EVs & Charging Solutions</title>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Motion (new Framer Motion) -->
+    <script src="https://unpkg.com/motion@10.18.0/dist/motion.react.js"></script>
+    
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #020617;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099ff 50%, #6610f2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .charging-pulse {
+            position: relative;
+        }
+        
+        .charging-pulse::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, #00d4ff, #0099ff);
+            opacity: 0;
+            z-index: -1;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 0.8; }
+            70% { transform: scale(1.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+        
+        .glow-cyan {
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
+        }
+        
+        .text-glow {
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Motion imports from motion/react (new API)
+        const { motion, AnimatePresence, useScroll, useTransform } = window.Motion;
+        
+        // Custom hook for scroll progress
+        const useScrollProgress = () => {
+            const { scrollYProgress } = useScroll();
+            return scrollYProgress;
+        };
+
+        // Navigation Component
+        const Navbar = () => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [scrolled, setScrolled] = useState(false);
+            
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+            
+            return (
+                <motion.nav 
+                    initial={{ y: -100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                    className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+                        scrolled ? 'bg-slate-950/90 backdrop-blur-xl border-b border-white/10' : 'bg-transparent'
+                    }`}
+                >
+                    <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+                        <motion.a 
+                            href="#"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center gap-3"
+                        >
+                            <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                                <i data-lucide="zap" className="w-5 h-5 text-white"></i>
+                            </div>
+                            <span className="text-2xl font-bold gradient-text tracking-tight">VoltAuto</span>
+                        </motion.a>
+
+                        <div className="hidden md:flex items-center gap-10">
+                            {['Vehicles', 'Charging', 'Deals', 'About'].map((item, i) => (
+                                <motion.a
+                                    key={item}
+                                    href={`#${item.toLowerCase()}`}
+                                    initial={{ opacity: 0, y: -20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 * i + 0.3 }}
+                                    whileHover={{ y: -2 }}
+                                    className="text-sm font-medium text-gray-300 hover:text-cyan-400 transition-colors relative group"
+                                >
+                                    {item}
+                                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full"></span>
+                                </motion.a>
+                            ))}
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.6 }}
+                                whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(0, 212, 255, 0.4)" }}
+                                whileTap={{ scale: 0.95 }}
+                                className="bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-2.5 rounded-full font-semibold text-sm shadow-lg shadow-cyan-500/25"
+                            >
+                                Book Test Drive
+                            </motion.button>
+                        </div>
+
+                        <motion.button 
+                            className="md:hidden p-2"
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setIsOpen(!isOpen)}
+                        >
+                            <i data-lucide={isOpen ? "x" : "menu"} className="w-6 h-6"></i>
+                        </motion.button>
+                    </div>
+
+                    <AnimatePresence>
+                        {isOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="md:hidden bg-slate-900/95 backdrop-blur-xl border-t border-white/10 overflow-hidden"
+                            >
+                                {['Vehicles', 'Charging', 'Deals', 'About'].map((item, i) => (
+                                    <motion.a 
+                                        key={item} 
+                                        href="#"
+                                        initial={{ x: -20, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: i * 0.1 }}
+                                        className="block px-6 py-4 text-gray-300 hover:text-cyan-400 hover:bg-white/5 transition-all border-b border-white/5"
+                                    >
+                                        {item}
+                                    </motion.a>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </motion.nav>
+            );
+        };
+
+        // Hero Section with Motion scroll animations
+        const Hero = () => {
+            const scrollY = useScrollProgress();
+            const y1 = useTransform(scrollY, [0, 1], [0, -100]);
+            const y2 = useTransform(scrollY, [0, 1], [0, -50]);
+            
+            return (
+                <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+                    {/* Animated Background */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <motion.div 
+                            animate={{ 
+                                scale: [1, 1.2, 1],
+                                rotate: [0, 90, 0],
+                            }}
+                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                            className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[100px]"
+                        />
+                        <motion.div 
+                            animate={{ 
+                                scale: [1, 1.3, 1],
+                                x: [0, 100, 0],
+                            }}
+                            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]"
+                        />
+                    </div>
+
+                    <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center relative z-10">
+                        <motion.div
+                            initial={{ opacity: 0, x: -50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                        >
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-sm font-medium mb-8"
+                            >
+                                <motion.span 
+                                    animate={{ scale: [1, 1.2, 1] }}
+                                    transition={{ duration: 2, repeat: Infinity }}
+                                    className="w-2 h-2 bg-cyan-400 rounded-full"
+                                />
+                                Next Gen Electric Mobility
+                            </motion.div>
+                            
+                            <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold leading-[0.9] mb-8 tracking-tight">
+                                Drive the <br />
+                                <motion.span 
+                                    className="gradient-text text-glow inline-block"
+                                    whileHover={{ scale: 1.02 }}
+                                >
+                                    Future
+                                </motion.span>
+                            </h1>
+                            
+                            <p className="text-gray-400 text-lg mb-10 max-w-lg leading-relaxed text-balance">
+                                Seamless EV charging meets premium automotive deals. Experience the revolution in sustainable transportation.
+                            </p>
+
+                            <div className="flex flex-wrap gap-4 mb-12">
+                                <motion.button
+                                    whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(0, 212, 255, 0.5)" }}
+                                    whileTap={{ scale: 0.95 }}
+                                    transition={{ type: "spring", stiffness: 400 }}
+                                    className="bg-gradient-to-r from-cyan-500 to-blue-600 px-8 py-4 rounded-full font-semibold text-lg shadow-lg shadow-cyan-500/25 flex items-center gap-2 group"
+                                >
+                                    Explore Vehicles
+                                    <motion.i 
+                                        data-lucide="arrow-right" 
+                                        className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                                    />
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)" }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="px-8 py-4 rounded-full font-semibold text-lg border border-white/20 flex items-center gap-2 backdrop-blur-sm"
+                                >
+                                    <i data-lucide="play-circle" className="w-5 h-5"></i>
+                                    Watch Demo
+                                </motion.button>
+                            </div>
+
+                            <div className="flex items-center gap-12">
+                                {[
+                                    { value: "15k+", label: "EVs Sold" },
+                                    { value: "500+", label: "Charging Stations" },
+                                    { value: "98%", label: "Satisfaction" }
+                                ].map((stat, i) => (
+                                    <motion.div
+                                        key={stat.label}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.8 + i * 0.1 }}
+                                        whileHover={{ y: -3 }}
+                                    >
+                                        <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
+                                        <div className="text-sm text-gray-500 font-medium">{stat.label}</div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                            style={{ y: y1 }}
+                            className="relative"
+                        >
+                            <motion.div
+                                animate={{ y: [0, -20, 0] }}
+                                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                                className="relative z-10"
+                            >
+                                <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-cyan-500/10">
+                                    <img 
+                                        src="https://picsum.photos/seed/evluxury/800/600" 
+                                        alt="Premium EV" 
+                                        className="w-full h-auto object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+                                </div>
+                                
+                                {/* Floating Stats Card */}
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 1, type: "spring" }}
+                                    whileHover={{ scale: 1.05, y: -5 }}
+                                    className="absolute -bottom-6 -left-6 glass-card p-5 rounded-2xl flex items-center gap-4 glow-cyan"
+                                >
+                                    <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-cyan-400 rounded-xl flex items-center justify-center">
+                                        <i data-lucide="battery-charging" className="w-7 h-7 text-slate-950"></i>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Fast Charging</div>
+                                        <div className="text-xl font-bold text-white">0-80% in 20min</div>
+                                    </div>
+                                </motion.div>
+
+                                {/* Speed Badge */}
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 1.2 }}
+                                    className="absolute top-8 -right-4 glass-card px-4 py-2 rounded-full flex items-center gap-2"
+                                >
+                                    <motion.div
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                                    >
+                                        <i data-lucide="gauge" className="w-4 h-4 text-cyan-400"></i>
+                                    </motion.div>
+                                    <span className="text-sm font-semibold">200 mph</span>
+                                </motion.div>
+                            </motion.div>
+                        </motion.div>
+                    </div>
+                </section>
+            );
+        };
+
+        // Charging Flow Section with staggered animations
+        const ChargingFlow = () => {
+            const steps = [
+                { icon: "map-pin", title: "Locate", desc: "Find nearest charging point via real-time map", color: "from-blue-400 to-cyan-400" },
+                { icon: "smartphone", title: "Connect", desc: "Seamless Bluetooth & NFC connectivity", color: "from-cyan-400 to-teal-400" },
+                { icon: "zap", title: "Charge", desc: "Automatic authentication and payment", color: "from-yellow-400 to-orange-400", highlight: true },
+                { icon: "gauge", title: "Monitor", desc: "Real-time charging analytics and ETA", color: "from-purple-400 to-pink-400" }
+            ];
+
+            const containerVariants = {
+                hidden: { opacity: 0 },
+                visible: {
+                    opacity: 1,
+                    transition: { staggerChildren: 0.15 }
+                }
+            };
+
+            const itemVariants = {
+                hidden: { opacity: 0, y: 30 },
+                visible: { 
+                    opacity: 1, 
+                    y: 0,
+                    transition: { type: "spring", stiffness: 100 }
+                }
+            };
+
+            return (
+                <section id="charging" className="py-32 relative overflow-hidden">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.8 }}
+                            className="text-center mb-24"
+                        >
+                            <motion.span 
+                                className="inline-block px-4 py-1 rounded-full bg-white/5 border border-white/10 text-cyan-400 text-sm font-medium mb-6"
+                            >
+                                How It Works
+                            </motion.span>
+                            <h2 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">
+                                Seamless <span className="gradient-text">Charging Flow</span>
+                            </h2>
+                            <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+                                Intuitive design eliminating friction at every step. From locating to monitoring, experience effortless charging.
+                            </p>
+                        </motion.div>
+
+                        <motion.div 
+                            variants={containerVariants}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true }}
+                            className="grid md:grid-cols-4 gap-6 relative"
+                        >
+                            {/* Connection Line */}
+                            <div className="hidden md:block absolute top-24 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"></div>
+
+                            {steps.map((step, i) => (
+                                <motion.div
+                                    key={step.title}
+                                    variants={itemVariants}
+                                    whileHover={{ y: -10, transition: { duration: 0.3 } }}
+                                    className="relative group"
+                                >
+                                    <div className={`glass-card p-8 rounded-3xl text-center relative overflow-hidden h-full ${step.highlight ? 'border-cyan-500/30' : ''}`}>
+                                        <motion.div 
+                                            className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                                        />
+                                        
+                                        <motion.div 
+                                            whileHover={{ rotate: 360, scale: 1.1 }}
+                                            transition={{ duration: 0.6 }}
+                                            className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center shadow-lg ${step.highlight ? 'charging-pulse' : ''}`}
+                                        >
+                                            <i data-lucide={step.icon} className="w-8 h-8 text-white"></i>
+                                        </motion.div>
+                                        
+                                        <h3 className="text-xl font-bold mb-3 text-white">{step.title}</h3>
+                                        <p className="text-gray-400 text-sm leading-relaxed mb-4">{step.desc}</p>
+                                        
+                                        <div className="text-cyan-400/60 font-mono text-xs tracking-widest">STEP 0{i + 1}</div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+
+                        {/* Interactive Demo Card */}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 50 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8, delay: 0.3 }}
+                            className="mt-24 glass-card rounded-3xl p-8 md:p-12 relative overflow-hidden border border-white/10"
+                        >
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+                            
+                            <div className="grid lg:grid-cols-2 gap-12 items-center relative z-10">
+                                <div>
+                                    <h3 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">Smart Charging Dashboard</h3>
+                                    <p className="text-gray-400 mb-10 text-lg">Real-time monitoring with predictive analytics and cost optimization algorithms.</p>
+                                    
+                                    <div className="space-y-6">
+                                        {[
+                                            { label: "Battery Level", value: 85, color: "from-green-400 to-emerald-400", icon: "battery" },
+                                            { label: "Charging Speed", value: 92, color: "from-cyan-400 to-blue-500", icon: "zap" },
+                                            { label: "Efficiency Score", value: 78, color: "from-purple-400 to-pink-500", icon: "trending-up" }
+                                        ].map((item, i) => (
+                                            <div key={item.label} className="space-y-3">
+                                                <div className="flex justify-between items-center">
+                                                    <div className="flex items-center gap-3">
+                                                        <i data-lucide={item.icon} className="w-4 h-4 text-gray-500"></i>
+                                                        <span className="text-gray-300 font-medium">{item.label}</span>
+                                                    </div>
+                                                    <motion.span 
+                                                        initial={{ opacity: 0 }}
+                                                        whileInView={{ opacity: 1 }}
+                                                        className="font-bold text-white"
+                                                    >
+                                                        {item.value}%
+                                                    </motion.span>
+                                                </div>
+                                                <div className="h-3 bg-slate-800/50 rounded-full overflow-hidden">
+                                                    <motion.div 
+                                                        initial={{ width: 0 }}
+                                                        whileInView={{ width: `${item.value}%` }}
+                                                        viewport={{ once: true }}
+                                                        transition={{ duration: 1.5, delay: 0.5 + i * 0.1, ease: "easeOut" }}
+                                                        className={`h-full bg-gradient-to-r ${item.color} rounded-full relative`}
+                                                    >
+                                                        <motion.div 
+                                                            animate={{ x: [0, 10, 0] }}
+                                                            transition={{ duration: 2, repeat: Infinity }}
+                                                            className="absolute inset-0 bg-white/20 rounded-full"
+                                                        />
+                                                    </motion.div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className="mt-8 w-full py-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-semibold flex items-center justify-center gap-2"
+                                    >
+                                        <i data-lucide="download" className="w-4 h-4"></i>
+                                        Download App
+                                    </motion.button>
+                                </div>
+                                
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.8 }}
+                                    className="relative"
+                                >
+                                    <motion.div
+                                        animate={{ y: [0, -10, 0] }}
+                                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                    >
+                                        <img 
+                                            src="https://picsum.photos/seed/chargingapp/600/450" 
+                                            alt="Charging Interface" 
+                                            className="rounded-2xl shadow-2xl shadow-cyan-500/10 w-full"
+                                        />
+                                    </motion.div>
+                                    
+                                    <motion.div 
+                                        animate={{ opacity: [0.5, 1, 0.5] }}
+                                        transition={{ duration: 2, repeat: Infinity }}
+                                        className="absolute top-6 right-6 bg-green-500/20 backdrop-blur-md px-4 py-2 rounded-full border border-green-500/30"
+                                    >
+                                        <span className="text-green-400 text-sm font-semibold flex items-center gap-2">
+                                            <motion.span 
+                                                animate={{ scale: [1, 1.2, 1] }}
+                                                transition={{ duration: 1, repeat: Infinity }}
+                                                className="w-2 h-2 bg-green-400 rounded-full"
+                                            />
+                                            Charging Active
+                                        </span>
+                                    </motion.div>
+                                </motion.div>
+                            </div>
+                        </motion.div>
+                    </div>
+                </section>
+            );
+        };
+
+        // Vehicle Showcase with hover effects
+        const VehicleShowcase = () => {
+            const vehicles = [
+                { name: "Tesla Model S Plaid", price: "$89,990", image: "https://picsum.photos/seed/teslaplaid/500/350", tag: "Best Seller", specs: "396 mi range" },
+                { name: "Lucid Air Dream", price: "$87,400", image: "https://picsum.photos/seed/luciddream/500/350", tag: "Luxury", specs: "516 mi range" },
+                { name: "BMW iX M60", price: "$87,100", image: "https://picsum.photos/seed/bmwm60/500/350", tag: "Performance", specs: "280 mi range" },
+                { name: "Rivian R1T", price: "$73,000", image: "https://picsum.photos/seed/riviantruck/500/350", tag: "Adventure", specs: "314 mi range" }
+            ];
+
+            return (
+                <section id="vehicles" className="py-32 bg-slate-900/30 relative">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6"
+                        >
+                            <div>
+                                <span className="text-cyan-400 text-sm font-semibold tracking-wider uppercase mb-4 block">Inventory</span>
+                                <h2 className="text-5xl md:text-6xl font-bold mb-4 tracking-tight">Premium <span className="gradient-text">EV Collection</span></h2>
+                                <p className="text-gray-400 max-w-xl text-lg">Curated selection with exclusive dealer pricing and instant delivery.</p>
+                            </div>
+                            <motion.a
+                                href="#"
+                                whileHover={{ x: 5 }}
+                                className="text-cyan-400 flex items-center gap-2 font-semibold group"
+                            >
+                                View All Inventory 
+                                <i data-lucide="arrow-right" className="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                            </motion.a>
+                        </motion.div>
+
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {vehicles.map((car, i) => (
+                                <motion.div
+                                    key={car.name}
+                                    initial={{ opacity: 0, y: 50 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
+                                    whileHover={{ y: -12, transition: { duration: 0.3 } }}
+                                    className="group cursor-pointer"
+                                >
+                                    <div className="glass-card rounded-3xl overflow-hidden h-full flex flex-col">
+                                        <div className="relative h-56 overflow-hidden">
+                                            <motion.img 
+                                                whileHover={{ scale: 1.1 }}
+                                                transition={{ duration: 0.6 }}
+                                                src={car.image} 
+                                                alt={car.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                            <div className="absolute top-4 left-4 bg-cyan-500/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg">
+                                                {car.tag}
+                                            </div>
+                                            <motion.div 
+                                                initial={{ opacity: 0, y: 10 }}
+                                                whileHover={{ opacity: 1, y: 0 }}
+                                                className="absolute bottom-4 left-4 right-4"
+                                            >
+                                                <div className="glass-card px-3 py-2 rounded-lg text-xs font-medium text-cyan-400 flex items-center gap-2">
+                                                    <i data-lucide="battery-full" className="w-3 h-3"></i>
+                                                    {car.specs}
+                                                </div>
+                                            </motion.div>
+                                        </div>
+                                        <div className="p-6 flex-1 flex flex-col">
+                                            <h3 className="text-lg font-bold mb-2 text-white group-hover:text-cyan-400 transition-colors">{car.name}</h3>
+                                            <div className="mt-auto flex justify-between items-center">
+                                                <div>
+                                                    <div className="text-xs text-gray-500 mb-1">Starting at</div>
+                                                    <div className="text-2xl font-bold text-cyan-400">{car.price}</div>
+                                                </div>
+                                                <motion.button
+                                                    whileHover={{ scale: 1.1, rotate: 45 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center hover:bg-cyan-500 hover:text-slate-950 transition-all border border-white/10"
+                                                >
+                                                    <i data-lucide="arrow-up-right" className="w-5 h-5"></i>
+                                                </motion.button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // Features Bento Grid
+        const Features = () => {
+            const features = [
+                { icon: "shield-check", title: "Certified Pre-Owned", desc: "Rigorous 150-point inspection guarantee on every vehicle", size: "col-span-1" },
+                { icon: "clock", title: "24/7 Support", desc: "Round-the-clock charging assistance and roadside help", size: "col-span-1" },
+                { icon: "wallet", title: "Flexible Financing", desc: "0% APR available for qualified buyers with instant approval", size: "col-span-1" },
+                { icon: "refresh-cw", title: "Trade-In Program", desc: "Instant quotes and seamless transitions from gas to electric", size: "col-span-1" },
+                { icon: "map", title: "Nationwide Network", desc: "Access to 50,000+ charging stations across the country with real-time availability", size: "md:col-span-2", large: true }
+            ];
+
+            return (
+                <section className="py-32">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="text-center mb-16"
+                        >
+                            <h2 className="text-4xl md:text-5xl font-bold mb-4">Why Choose <span className="gradient-text">VoltAuto</span></h2>
+                        </motion.div>
+
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {features.map((feature, i) => (
+                                <motion.div
+                                    key={feature.title}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: i * 0.1 }}
+                                    whileHover={{ scale: 1.02, y: -5 }}
+                                    className={`glass-card p-8 rounded-3xl border border-white/5 hover:border-cyan-500/30 transition-all cursor-pointer group ${feature.size}`}
+                                >
+                                    <motion.div 
+                                        whileHover={{ rotate: 360, scale: 1.1 }}
+                                        transition={{ duration: 0.6 }}
+                                        className="w-14 h-14 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center mb-6 group-hover:from-cyan-500 group-hover:to-blue-600 transition-all"
+                                    >
+                                        <i data-lucide={feature.icon} className="w-7 h-7 text-cyan-400 group-hover:text-white transition-colors"></i>
+                                    </motion.div>
+                                    <h3 className="text-xl font-bold mb-3 text-white">{feature.title}</h3>
+                                    <p className={`text-gray-400 leading-relaxed ${feature.large ? 'text-lg' : 'text-sm'}`}>{feature.desc}</p>
+                                    
+                                    {feature.large && (
+                                        <motion.div 
+                                            initial={{ opacity: 0 }}
+                                            whileInView={{ opacity: 1 }}
+                                            transition={{ delay: 0.5 }}
+                                            className="mt-6 flex items-center gap-2 text-cyan-400 font-semibold"
+                                        >
+                                            <span>Explore Network</span>
+                                            <i data-lucide="arrow-right" className="w-4 h-4"></i>
+                                        </motion.div>
+                                    )}
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // CTA Section with parallax
+        const CTA = () => {
+            const scrollY = useScrollProgress();
+            const backgroundY = useTransform(scrollY, [0, 1], ["0%", "50%"]);
+            
+            return (
+                <section className="py-32 relative overflow-hidden">
+                    <motion.div 
+                        style={{ y: backgroundY }}
+                        className="absolute inset-0 pointer-events-none"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 blur-[120px]"></div>
+                    </motion.div>
+                    
+                    <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8 }}
+                        >
+                            <motion.h2 
+                                className="text-5xl md:text-7xl font-bold mb-8 tracking-tight"
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                            >
+                                Ready to Go <br />
+                                <span className="gradient-text text-glow">Electric?</span>
+                            </motion.h2>
+                            
+                            <motion.p 
+                                initial={{ opacity: 0 }}
+                                whileInView={{ opacity: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.2 }}
+                                className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed"
+                            >
+                                Join the sustainable revolution. Book a test drive today and experience the future of mobility with zero emissions and maximum performance.
+                            </motion.p>
+                            
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <motion.button
+                                    whileHover={{ scale: 1.05, boxShadow: "0 0 60px rgba(0, 212, 255, 0.5)" }}
+                                    whileTap={{ scale: 0.95 }}
+                                    transition={{ type: "spring", stiffness: 400 }}
+                                    className="bg-gradient-to-r from-cyan-500 to-blue-600 px-12 py-5 rounded-full font-bold text-lg shadow-lg shadow-cyan-500/25"
+                                >
+                                    Schedule Test Drive
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)" }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="px-12 py-5 rounded-full font-bold text-lg border border-white/20 backdrop-blur-sm"
+                                >
+                                    Contact Sales
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </div>
+                </section>
+            );
+        };
+
+        // Footer
+        const Footer = () => {
+            return (
+                <footer className="border-t border-white/10 bg-slate-950 pt-20 pb-10">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="grid md:grid-cols-4 gap-12 mb-16">
+                            <div>
+                                <motion.div 
+                                    className="flex items-center gap-3 mb-6"
+                                    whileHover={{ scale: 1.02 }}
+                                >
+                                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center">
+                                        <i data-lucide="zap" className="w-5 h-5 text-white"></i>
+                                    </div>
+                                    <span className="text-2xl font-bold gradient-text">VoltAuto</span>
+                                </motion.div>
+                                <p className="text-gray-500 text-sm leading-relaxed">
+                                    Pioneering the future of sustainable transportation through premium EVs and seamless charging experiences.
+                                </p>
+                            </div>
+                            
+                            {[
+                                { title: "Vehicles", links: ["New Arrivals", "Pre-Owned", "Test Drive", "Compare Models"] },
+                                { title: "Charging", links: ["Station Map", "Home Charging", "Business Solutions", "Pricing Plans"] },
+                                { title: "Company", links: ["About Us", "Careers", "Press", "Contact"] }
+                            ].map((col) => (
+                                <div key={col.title}>
+                                    <h4 className="font-bold mb-6 text-white">{col.title}</h4>
+                                    <ul className="space-y-4">
+                                        {col.links.map((link) => (
+                                            <li key={link}>
+                                                <motion.a 
+                                                    href="#" 
+                                                    whileHover={{ x: 3, color: "#00d4ff" }}
+                                                    className="text-gray-500 hover:text-cyan-400 transition-colors text-sm block"
+                                                >
+                                                    {link}
+                                                </motion.a>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <p className="text-gray-600 text-sm">© 2026 VoltAuto. All rights reserved.</p>
+                            <div className="flex gap-6">
+                                {[
+                                    { icon: "twitter", label: "Twitter" },
+                                    { icon: "instagram", label: "Instagram" },
+                                    { icon: "linkedin", label: "LinkedIn" },
+                                    { icon: "youtube", label: "YouTube" }
+                                ].map((social) => (
+                                    <motion.a
+                                        key={social.icon}
+                                        href="#"
+                                        whileHover={{ y: -3, scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        aria-label={social.label}
+                                        className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-500 hover:text-cyan-400 hover:bg-white/10 transition-all"
+                                    >
+                                        <i data-lucide={social.icon} className="w-5 h-5"></i>
+                                    </motion.a>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            );
+        };
+
+        // Main App Component
+        const App = () => {
+            useEffect(() => {
+                lucide.createIcons();
+            }, []);
+
+            return (
+                <div className="min-h-screen bg-slate-950 text-white selection:bg-cyan-500/30">
+                    <Navbar />
+                    <Hero />
+                    <ChargingFlow />
+                    <VehicleShowcase />
+                    <Features />
+                    <CTA />
+                    <Footer />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+// Old (Framer Motion)
+import { motion } from "framer-motion"
+
+// New (Motion)
+import { motion } from "motion/react"
+
+whileHover={{ scale: 1.05 }}
+transition={{ type: "spring", stiffness: 400 }}
+
+<motion.div
+  initial={{ opacity: 0 }}
+  whileInView={{ opacity: 1 }}
+  viewport={{ once: true, margin: "-100px" }}
+/>
+</html>
